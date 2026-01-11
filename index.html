@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
+    <title>World Map Quiz</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {},
+            animation: {
+              'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
+            },
+            keyframes: {
+              'shake': {
+                '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
+                '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
+                '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
+                '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
+              }
+            }
+          }
+        }
+      }
+    </script>
+
+    <!-- Import Map for External Libs -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "react-simple-maps": "https://esm.sh/react-simple-maps@3.0.0?external=react,react-dom",
+        "react-tooltip": "https://esm.sh/react-tooltip@5.26.3?external=react,react-dom",
+        "framer-motion": "https://esm.sh/framer-motion@11.0.8?external=react,react-dom",
+        "lucide-react": "https://esm.sh/lucide-react@0.344.0?external=react,react-dom",
+        "clsx": "https://esm.sh/clsx@2.1.0",
+        "tailwind-merge": "https://esm.sh/tailwind-merge@2.2.1"
+      }
+    }
+    </script>
+
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body class="bg-zinc-950 text-slate-100 transition-colors duration-300 antialiased h-screen overflow-hidden font-sans tracking-wide">
+    <div id="root" class="h-full"></div>
+    
+    <!-- Local Modules Loaded sequentially -->
+    <!-- We use type="text/babel" data-type="module" so they can import React from the importmap -->
+    
+    <!-- Data -->
+    <script type="text/babel" data-type="module" src="./src/data/countries.js?v=6"></script>
+    
+    <!-- Utils -->
+    <script type="text/babel" data-type="module" src="./src/utils/gameHelpers.js"></script>
+
+    <!-- Components -->
+    <script type="text/babel" data-type="module" src="./src/components/MapBoard.jsx?v=6"></script>
+    <script type="text/babel" data-type="module" src="./src/components/CountryList.jsx?v=6"></script>
+    <script type="text/babel" data-type="module" src="./src/components/ListModal.jsx?v=6"></script>
+    <script type="text/babel" data-type="module" src="./src/components/StudyModal.jsx?v=6"></script>
+    <script type="text/babel" data-type="module" src="./src/components/StatsModal.jsx?v=6"></script>
+    <script type="text/babel" data-type="module" src="./src/components/GameUI.jsx?v=6"></script>
+    
+    <!-- App -->
+    <script type="text/babel" data-type="module" src="./src/App.jsx?v=6"></script>
+    
+    <!-- Entry -->
+    <script type="text/babel" data-type="module" src="./src/main.jsx?v=6"></script>
+  </body>
+</html>
