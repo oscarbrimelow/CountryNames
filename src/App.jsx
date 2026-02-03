@@ -152,7 +152,21 @@ function App() {
       bank[c.id] = (bank[c.id] || 0) + 1;
     });
     localStorage.setItem('learning_bank', JSON.stringify(bank));
-  }, [activeCountries, foundCountries]);
+
+    // Save to Firestore Leaderboard
+    if (user && window.db) {
+      window.db.collection('scores').add({
+        userId: user.uid,
+        userName: user.displayName || 'Anonymous',
+        photoURL: user.photoURL,
+        score: foundCountries.length,
+        total: activeCountries.length,
+        region: continentFilter,
+        duration: timeLimit,
+        date: window.firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(err => console.error("Error saving score:", err));
+    }
+  }, [activeCountries, foundCountries, user, continentFilter, timeLimit]);
 
   const handleInput = (input) => {
     const normalizedInput = normalize(input);

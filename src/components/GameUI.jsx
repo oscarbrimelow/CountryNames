@@ -27,10 +27,12 @@ const GameUI = ({
   onShowAuth
 }) => {
   const { getFlagUrl, generateShareText } = window.gameHelpers || {};
+  const Leaderboard = window.Leaderboard;
   
   const [input, setInput] = useState("");
   const [shake, setShake] = useState(false);
   const [inputStyle, setInputStyle] = useState("normal"); // normal, close
+  const [activeTab, setActiveTab] = useState('home'); // 'home', 'leaderboard'
   const inputRef = useRef(null);
 
   // Auto-focus logic
@@ -270,96 +272,120 @@ const GameUI = ({
                 <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-br from-white to-slate-500 bg-clip-text text-transparent mb-2 tracking-tight">
                     World Quiz
                 </h1>
-                <p className="text-slate-400 mb-8 font-light tracking-wide">Test your geographical knowledge</p>
+                <p className="text-slate-400 mb-6 font-light tracking-wide">Test your geographical knowledge</p>
 
-                {gameStatus === 'ended' && (
-                    <div className="mb-8 p-4 bg-white/5 rounded-xl border border-white/5">
-                        <p className="text-slate-300 text-sm uppercase tracking-widest mb-1">Final Score</p>
-                        <p className="text-4xl font-mono font-bold text-emerald-400">{score} <span className="text-lg text-slate-500">/ {totalCountries}</span></p>
-                        
-                        <button
-                          onClick={() => {
-                            const text = generateShareText(score, totalCountries, foundCountries, countries, continentFilter);
-                            navigator.clipboard.writeText(text);
-                            alert("Result copied to clipboard!");
-                          }}
-                          className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-lg flex items-center justify-center gap-2 mx-auto transition-colors"
-                        >
-                          <Share2 className="w-4 h-4" />
-                          Share Result
-                        </button>
-                    </div>
-                )}
-
-                <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="text-left">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 block">Region</label>
-                            <select 
-                                value={continentFilter} 
-                                onChange={(e) => setContinentFilter(e.target.value)}
-                                className="w-full bg-zinc-800 border border-white/10 text-slate-200 text-sm rounded-lg p-3 focus:outline-none focus:border-emerald-500/50"
-                            >
-                                <option value="All">Global</option>
-                                <option value="Europe">Europe</option>
-                                <option value="Asia">Asia</option>
-                                <option value="Africa">Africa</option>
-                                <option value="North America">North America</option>
-                                <option value="South America">South America</option>
-                                <option value="Oceania">Oceania</option>
-                            </select>
-                        </div>
-                        <div className="text-left">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 block">Duration</label>
-                            <select 
-                                value={timeLimit} 
-                                onChange={(e) => setTimeLimit(Number(e.target.value))}
-                                className="w-full bg-zinc-800 border border-white/10 text-slate-200 text-sm rounded-lg p-3 focus:outline-none focus:border-emerald-500/50"
-                            >
-                                <option value={300}>5 Min</option>
-                                <option value={600}>10 Min</option>
-                                <option value={900}>15 Min</option>
-                                <option value={1200}>20 Min</option>
-                                <option value={1800}>30 Min</option>
-                                <option value={3600}>60 Min</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="mb-2 mt-4">
-                        <button 
-                            onClick={onShowAuth}
-                            className="w-full py-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 font-medium rounded-xl flex items-center justify-center gap-2 transition-all"
-                        >
-                            <User className="w-4 h-4" />
-                            {user ? 'View Profile' : 'Login / Sign Up'}
-                        </button>
-                    </div>
-
-                    <button 
-                        onClick={onStart}
-                        className="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 transition-all active:scale-95 mt-6"
-                    >
-                        <Play className="w-5 h-5 fill-current" />
-                        {gameStatus === 'ended' ? 'Play Again' : 'Start Game'}
-                    </button>
-
-                    <button 
-                        onClick={onShowStats}
-                        className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-medium rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"
-                    >
-                        <BarChart2 className="w-4 h-4" />
-                        View Learning Bank
-                    </button>
-
-                    <button 
-                        onClick={onShowList}
-                        className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-medium rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"
-                    >
-                        <List className="w-4 h-4" />
-                        View All Countries
-                    </button>
+                {/* Tabs */}
+                <div className="flex p-1 bg-white/5 rounded-xl mb-6">
+                  <button 
+                    onClick={() => setActiveTab('home')} 
+                    className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'home' ? 'bg-zinc-800 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                  >
+                    Play
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('leaderboard')} 
+                    className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'leaderboard' ? 'bg-zinc-800 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                  >
+                    Leaderboard
+                  </button>
                 </div>
+
+                {activeTab === 'home' ? (
+                  <>
+                    {gameStatus === 'ended' && (
+                        <div className="mb-8 p-4 bg-white/5 rounded-xl border border-white/5">
+                            <p className="text-slate-300 text-sm uppercase tracking-widest mb-1">Final Score</p>
+                            <p className="text-4xl font-mono font-bold text-emerald-400">{score} <span className="text-lg text-slate-500">/ {totalCountries}</span></p>
+                            
+                            <button
+                              onClick={() => {
+                                const text = generateShareText(score, totalCountries, foundCountries, countries, continentFilter);
+                                navigator.clipboard.writeText(text);
+                                alert("Result copied to clipboard!");
+                              }}
+                              className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-lg flex items-center justify-center gap-2 mx-auto transition-colors"
+                            >
+                              <Share2 className="w-4 h-4" />
+                              Share Result
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="text-left">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 block">Region</label>
+                                <select 
+                                    value={continentFilter} 
+                                    onChange={(e) => setContinentFilter(e.target.value)}
+                                    className="w-full bg-zinc-800 border border-white/10 text-slate-200 text-sm rounded-lg p-3 focus:outline-none focus:border-emerald-500/50"
+                                >
+                                    <option value="All">Global</option>
+                                    <option value="Europe">Europe</option>
+                                    <option value="Asia">Asia</option>
+                                    <option value="Africa">Africa</option>
+                                    <option value="North America">North America</option>
+                                    <option value="South America">South America</option>
+                                    <option value="Oceania">Oceania</option>
+                                </select>
+                            </div>
+                            <div className="text-left">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 block">Duration</label>
+                                <select 
+                                    value={timeLimit} 
+                                    onChange={(e) => setTimeLimit(Number(e.target.value))}
+                                    className="w-full bg-zinc-800 border border-white/10 text-slate-200 text-sm rounded-lg p-3 focus:outline-none focus:border-emerald-500/50"
+                                >
+                                    <option value={300}>5 Min</option>
+                                    <option value={600}>10 Min</option>
+                                    <option value={900}>15 Min</option>
+                                    <option value={1200}>20 Min</option>
+                                    <option value={1800}>30 Min</option>
+                                    <option value={3600}>60 Min</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="mb-2 mt-4">
+                            <button 
+                                onClick={onShowAuth}
+                                className="w-full py-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 font-medium rounded-xl flex items-center justify-center gap-2 transition-all"
+                            >
+                                <User className="w-4 h-4" />
+                                {user ? 'View Profile' : 'Login / Sign Up'}
+                            </button>
+                        </div>
+
+                        <button 
+                            onClick={onStart}
+                            className="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 transition-all active:scale-95 mt-6"
+                        >
+                            <Play className="w-5 h-5 fill-current" />
+                            {gameStatus === 'ended' ? 'Play Again' : 'Start Game'}
+                        </button>
+
+                        <button 
+                            onClick={onShowStats}
+                            className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-medium rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"
+                        >
+                            <BarChart2 className="w-4 h-4" />
+                            View Learning Bank
+                        </button>
+
+                        <button 
+                            onClick={onShowList}
+                            className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-medium rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"
+                        >
+                            <List className="w-4 h-4" />
+                            View All Countries
+                        </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="h-[400px]">
+                    <Leaderboard />
+                  </div>
+                )}
             </motion.div>
         </div>
       )}
