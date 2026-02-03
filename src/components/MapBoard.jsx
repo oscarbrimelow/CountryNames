@@ -124,7 +124,7 @@ const MapBoard = ({
           </Geographies>
           {highlightCountry && flagLocation && flagUrl && (
             <Marker coordinates={flagLocation}>
-               <foreignObject x="-15" y="-25" width="30" height="20">
+               <foreignObject x="-10" y="-20" width="20" height="15">
                  <div className="w-full h-full rounded-sm overflow-hidden border border-white shadow-lg bg-zinc-900 animate-[bounce_2s_infinite]">
                     <img src={flagUrl} alt="Flag" className="w-full h-full object-cover" />
                  </div>

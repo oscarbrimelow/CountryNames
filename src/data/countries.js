@@ -1573,7 +1573,7 @@ const countriesData = [
     name: "South Africa",
     aliases: ["za", "rsa"],
     continent: "Africa",
-    capital: "Pretoria",
+    capital: "Pretoria (Executive), Cape Town (Legislative), Bloemfontein (Judicial)",
     fact: "South Africa is the only country in the world with three capital cities."
   },
   {

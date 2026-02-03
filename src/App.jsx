@@ -341,8 +341,12 @@ function App() {
   const handleInput = (input) => {
     const normalizedInput = normalize(input);
     
+    // Determine search pool: use all countries for Flag Quiz to avoid filter issues, 
+    // otherwise use filtered activeCountries for Classic Mode
+    const searchPool = gameMode === 'flags' ? countries : activeCountries;
+    
     // 1. Check Exact Match
-    const match = activeCountries.find(country => {
+    const match = searchPool.find(country => {
       if (foundCountries.includes(country.id)) return false;
       const nameMatch = normalize(country.name) === normalizedInput;
       const aliasMatch = country.aliases && country.aliases.some(alias => normalize(alias) === normalizedInput);
@@ -403,7 +407,7 @@ function App() {
 
     // 2. Fuzzy Match (Almost There)
     if (input.length > 3) {
-        const closeMatch = activeCountries.find(country => {
+        const closeMatch = searchPool.find(country => {
             if (foundCountries.includes(country.id)) return false;
             // Check name dist
             const nameDist = levenshteinDistance(normalizedInput, normalize(country.name));

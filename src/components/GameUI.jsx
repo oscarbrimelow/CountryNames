@@ -402,22 +402,21 @@ const GameUI = ({
 
                         {/* Quizzes Sub-View */}
                         {playView === 'quizzes' && (
-                            <div className="h-full flex flex-col md:flex-row gap-6 overflow-hidden">
-                                {/* Left Column: Quizzes List */}
-                                <div className="flex-1 flex flex-col h-full overflow-hidden">
-                                    <div className="flex items-center gap-4 mb-4">
-                                        <button 
-                                            onClick={() => setPlayView('menu')}
-                                            className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors"
-                                        >
-                                            <ArrowLeft className="w-6 h-6" />
-                                        </button>
-                                        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                                            <Activity className="w-6 h-6 text-emerald-400" />
-                                            Quizzes
-                                        </h2>
-                                    </div>
-                                    <div className="grid grid-cols-1 gap-4 overflow-y-auto pr-2 scrollbar-hide">
+                            <div className="flex flex-col h-full overflow-y-auto custom-scrollbar">
+                                <div className="flex items-center gap-4 mb-6 shrink-0">
+                                    <button 
+                                        onClick={() => setPlayView('menu')}
+                                        className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors"
+                                    >
+                                        <ArrowLeft className="w-6 h-6" />
+                                    </button>
+                                    <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                                        <Play className="w-6 h-6 text-emerald-400" />
+                                        Game Setup
+                                    </h2>
+                                </div>
+
+                                <div className="space-y-6 pb-20">
                                         {gameModes.map(mode => (
                                             <button
                                                 key={mode.id}
