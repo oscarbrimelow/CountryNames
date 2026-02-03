@@ -45,6 +45,7 @@ function App() {
   const [timeLimit, setTimeLimit] = useState(900); // Default 15 minutes
   const [timeLeft, setTimeLeft] = useState(900);
   const [continentFilter, setContinentFilter] = useState("All");
+  const [viewingMap, setViewingMap] = useState(false);
   
   // Map State
   const [zoom, setZoom] = useState(1);
@@ -322,8 +323,8 @@ function App() {
   };
 
   const handleCountryClick = (geo) => {
-    // Only in study mode
-    if (gameStatus !== 'ended') return;
+    // Only in study mode or explore mode
+    if (gameStatus !== 'ended' && !viewingMap) return;
 
     // Check if clicked country is in our data
     // Geo ID is usually string, our ID is string.
@@ -348,6 +349,7 @@ function App() {
             center={center}
             setCenter={setCenter}
             filterContinent={continentFilter}
+            mapMode={viewingMap ? 'explore' : 'game'}
           />
       </div>
 
@@ -379,6 +381,8 @@ function App() {
           onShowProfile={() => setShowProfile(true)}
           onShowAbout={() => setShowAbout(true)}
           onUserClick={(u) => { setViewingProfile(u); setShowProfile(true); }}
+          viewingMap={viewingMap}
+          setViewingMap={setViewingMap}
         />
       </div>
 

@@ -27,7 +27,9 @@ const GameUI = ({
   onShowAuth,
   onShowProfile, // Still used for "View Profile" of others if needed, but mostly replaced by tabs
   onShowAbout,   // Replaced by tab
-  onUserClick    // Passed to Leaderboard
+  onUserClick,    // Passed to Leaderboard
+  viewingMap,
+  setViewingMap
 }) => {
   const { getFlagUrl, generateShareText } = window.gameHelpers || {};
   const Leaderboard = window.Leaderboard;
@@ -37,8 +39,12 @@ const GameUI = ({
   const [shake, setShake] = useState(false);
   const [inputStyle, setInputStyle] = useState("normal");
   const [activeTab, setActiveTab] = useState('play'); // 'play', 'leaderboard', 'account', 'about'
+  
+  // Play Tab Sub-Views
+  const [playView, setPlayView] = useState('menu'); // 'menu', 'quizzes', 'learn'
+
   const [selectedMode, setSelectedMode] = useState('classic');
-  const [viewingMap, setViewingMap] = useState(false);
+  // const [viewingMap, setViewingMap] = useState(false); // Lifted to App.jsx
   const inputRef = useRef(null);
 
   // Auto-focus logic
@@ -330,40 +336,95 @@ const GameUI = ({
                     
                     {/* PLAY TAB */}
                     {activeTab === 'play' && (
-                      <div className="h-full flex flex-col md:flex-row gap-6 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
-                        {/* Left Column: Game Modes & Sections */}
-                        <div className="flex-1 overflow-y-auto pr-2 scrollbar-hide">
-                            <div className="flex flex-col gap-6">
-                                
-                                {/* Quizzes Section */}
-                                <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                                    <h3 className="text-sm font-bold text-emerald-500 mb-3 flex items-center gap-2">
-                                        <Activity className="w-4 h-4" />
-                                        Quizzes
-                                    </h3>
-                                    <div className="grid grid-cols-1 gap-3">
+                      <div className="h-full flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        
+                        {/* Play Menu (Main View) */}
+                        {playView === 'menu' && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full p-2">
+                                {/* Quizzes Button */}
+                                <button 
+                                    onClick={() => setPlayView('quizzes')}
+                                    className="bg-white/5 hover:bg-emerald-500/10 border border-white/5 hover:border-emerald-500/50 rounded-3xl p-6 flex flex-col items-center justify-center gap-4 group transition-all h-full shadow-xl"
+                                >
+                                    <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                                        <Activity className="w-10 h-10" />
+                                    </div>
+                                    <div className="text-center">
+                                        <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-emerald-400 transition-colors">Quizzes</h3>
+                                        <p className="text-sm text-slate-400">Test your knowledge with various game modes</p>
+                                    </div>
+                                </button>
+
+                                {/* Learn Button */}
+                                <button 
+                                    onClick={() => setPlayView('learn')}
+                                    className="bg-white/5 hover:bg-blue-500/10 border border-white/5 hover:border-blue-500/50 rounded-3xl p-6 flex flex-col items-center justify-center gap-4 group transition-all h-full shadow-xl"
+                                >
+                                    <div className="w-20 h-20 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
+                                        <BookOpen className="w-10 h-10" />
+                                    </div>
+                                    <div className="text-center">
+                                        <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">Learn</h3>
+                                        <p className="text-sm text-slate-400">Study countries and facts</p>
+                                    </div>
+                                </button>
+
+                                {/* See Map Button */}
+                                <button 
+                                    onClick={() => setViewingMap(true)}
+                                    className="bg-white/5 hover:bg-amber-500/10 border border-white/5 hover:border-amber-500/50 rounded-3xl p-6 flex flex-col items-center justify-center gap-4 group transition-all h-full shadow-xl"
+                                >
+                                    <div className="w-20 h-20 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
+                                        <Map className="w-10 h-10" />
+                                    </div>
+                                    <div className="text-center">
+                                        <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-amber-400 transition-colors">See Map</h3>
+                                        <p className="text-sm text-slate-400">Explore the world map freely</p>
+                                    </div>
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Quizzes Sub-View */}
+                        {playView === 'quizzes' && (
+                            <div className="h-full flex flex-col md:flex-row gap-6 overflow-hidden">
+                                {/* Left Column: Quizzes List */}
+                                <div className="flex-1 flex flex-col h-full overflow-hidden">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <button 
+                                            onClick={() => setPlayView('menu')}
+                                            className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors"
+                                        >
+                                            <ArrowLeft className="w-6 h-6" />
+                                        </button>
+                                        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                                            <Activity className="w-6 h-6 text-emerald-400" />
+                                            Quizzes
+                                        </h2>
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-4 overflow-y-auto pr-2 scrollbar-hide">
                                         {gameModes.map(mode => (
                                             <button
                                                 key={mode.id}
                                                 onClick={() => mode.status === 'active' && setSelectedMode(mode.id)}
-                                                className={`relative group p-4 rounded-xl border text-left transition-all ${
+                                                className={`relative group p-6 rounded-2xl border text-left transition-all ${
                                                     selectedMode === mode.id 
                                                         ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/10' 
                                                         : 'bg-white/5 border-white/5 hover:bg-white/10'
                                                 } ${mode.status !== 'active' ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             >
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`p-2 rounded-lg ${selectedMode === mode.id ? 'bg-emerald-500 text-white' : 'bg-zinc-800 text-slate-400'}`}>
-                                                        <mode.icon className="w-4 h-4" />
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`p-3 rounded-xl ${selectedMode === mode.id ? 'bg-emerald-500 text-white' : 'bg-zinc-800 text-slate-400'}`}>
+                                                        <mode.icon className="w-6 h-6" />
                                                     </div>
                                                     <div className="flex-1">
-                                                        <div className="flex items-center justify-between">
-                                                            <h3 className={`text-sm font-bold ${selectedMode === mode.id ? 'text-white' : 'text-slate-300'}`}>{mode.name}</h3>
+                                                        <div className="flex items-center justify-between mb-1">
+                                                            <h3 className={`text-lg font-bold ${selectedMode === mode.id ? 'text-white' : 'text-slate-300'}`}>{mode.name}</h3>
                                                             {mode.status !== 'active' && (
-                                                                <Lock className="w-3 h-3 text-slate-500" />
+                                                                <Lock className="w-4 h-4 text-slate-500" />
                                                             )}
                                                         </div>
-                                                        <p className="text-[10px] text-slate-500 leading-tight mt-0.5">{mode.description}</p>
+                                                        <p className="text-xs text-slate-500 leading-relaxed">{mode.description}</p>
                                                     </div>
                                                 </div>
                                             </button>
@@ -371,143 +432,137 @@ const GameUI = ({
                                     </div>
                                 </div>
 
-                                {/* Learn Section */}
-                                <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                                    <h3 className="text-sm font-bold text-blue-400 mb-3 flex items-center gap-2">
-                                        <BookOpen className="w-4 h-4" />
+                                {/* Right Column: Settings (Reused) */}
+                                <div className="flex-1 flex flex-col bg-white/5 rounded-2xl p-6 border border-white/5 overflow-y-auto scrollbar-hide">
+                                    {gameStatus === 'ended' && (
+                                        <div className="mb-6 p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                                            <p className="text-emerald-400 text-xs uppercase tracking-widest mb-1 font-bold">Previous Run</p>
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-4xl font-mono font-bold text-white">{score}</span>
+                                                <span className="text-sm text-slate-400">/ {totalCountries}</span>
+                                            </div>
+                                            <button
+                                              onClick={() => {
+                                                const text = generateShareText(score, totalCountries, foundCountries, countries, continentFilter);
+                                                navigator.clipboard.writeText(text);
+                                                alert("Result copied to clipboard!");
+                                              }}
+                                              className="mt-3 text-xs flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-bold uppercase tracking-wide transition-colors"
+                                            >
+                                              <Share2 className="w-3 h-3" />
+                                              Share Result
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    <div className="flex-1">
+                                        <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                            <Globe className="w-4 h-4 text-emerald-500" />
+                                            Game Settings
+                                        </h2>
+                                        
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Region</label>
+                                                <select 
+                                                    value={continentFilter} 
+                                                    onChange={(e) => setContinentFilter(e.target.value)}
+                                                    className="w-full bg-zinc-900 border border-white/10 text-slate-200 text-sm rounded-xl p-3 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                                                >
+                                                    <option value="All">Global - All Countries</option>
+                                                    <option value="Europe">Europe</option>
+                                                    <option value="Asia">Asia</option>
+                                                    <option value="Africa">Africa</option>
+                                                    <option value="North America">North America</option>
+                                                    <option value="South America">South America</option>
+                                                    <option value="Oceania">Oceania</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Duration</label>
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    {[300, 600, 900, 1200, 1800, 3600].map(time => (
+                                                        <button
+                                                            key={time}
+                                                            onClick={() => setTimeLimit(time)}
+                                                            className={`py-2 rounded-lg text-xs font-bold transition-all border ${
+                                                                timeLimit === time 
+                                                                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' 
+                                                                    : 'bg-zinc-900 border-white/10 text-slate-400 hover:border-white/20'
+                                                            }`}
+                                                        >
+                                                            {time / 60}m
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-6 pt-6 border-t border-white/5">
+                                            <h3 className="text-sm font-bold text-amber-500 mb-3 flex items-center gap-2">
+                                                <Trophy className="w-4 h-4" />
+                                                Scoring System
+                                            </h3>
+                                            <div className="space-y-2 text-xs text-slate-400">
+                                                <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
+                                                    <span>Base Score</span>
+                                                    <span className="font-mono text-white font-bold">+10 pts / country</span>
+                                                </div>
+                                                <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
+                                                    <span>Flag Bonus</span>
+                                                    <span className="font-mono text-amber-400 font-bold">+50 pts / flag</span>
+                                                </div>
+                                                <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
+                                                    <span>Speed Run Bonus</span>
+                                                    <span className="font-mono text-emerald-400 font-bold">+2 pts / sec left</span>
+                                                </div>
+                                                <p className="text-[10px] text-slate-500 italic mt-1 text-center">
+                                                    *Speed bonus only applies if ALL countries are found!
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button 
+                                        onClick={onStart}
+                                        className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-zinc-900 font-black text-lg uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98] mt-6"
+                                    >
+                                        {gameStatus === 'ended' ? 'Play Again' : 'Start Game'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Learn Sub-View */}
+                        {playView === 'learn' && (
+                            <div className="flex flex-col h-full">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <button 
+                                        onClick={() => setPlayView('menu')}
+                                        className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors"
+                                    >
+                                        <ArrowLeft className="w-6 h-6" />
+                                    </button>
+                                    <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                                        <BookOpen className="w-6 h-6 text-blue-400" />
                                         Learn
-                                    </h3>
-                                    <div className="p-6 bg-zinc-900/50 rounded-xl text-center border border-dashed border-white/10 flex flex-col items-center justify-center gap-2 group cursor-not-allowed">
-                                        <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500/20 transition-colors">
-                                            <BookOpen className="w-5 h-5" />
+                                    </h2>
+                                </div>
+                                <div className="flex-1 flex items-center justify-center">
+                                    <div className="p-8 bg-zinc-900/50 rounded-3xl text-center border border-dashed border-white/10 flex flex-col items-center justify-center gap-4 max-w-md mx-auto">
+                                        <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
+                                            <BookOpen className="w-8 h-8" />
                                         </div>
                                         <div>
-                                            <span className="text-xs font-bold text-slate-400 block">Interactive Lessons</span>
-                                            <span className="text-[10px] text-slate-600 uppercase tracking-widest font-bold">Coming Soon</span>
+                                            <h3 className="text-xl font-bold text-white mb-2">Interactive Lessons</h3>
+                                            <p className="text-slate-400 text-sm mb-4">Master geography with detailed facts and visual guides.</p>
+                                            <span className="inline-block px-4 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-bold uppercase tracking-widest">Coming Soon</span>
                                         </div>
-                                    </div>
-                                </div>
-
-                                {/* See Map Section */}
-                                <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                                    <h3 className="text-sm font-bold text-amber-500 mb-3 flex items-center gap-2">
-                                        <Map className="w-4 h-4" />
-                                        See Map
-                                    </h3>
-                                    <button
-                                        onClick={() => setViewingMap(true)}
-                                        className="w-full p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20 text-amber-400 border border-amber-500/20 rounded-xl transition-all flex items-center justify-center gap-3 group"
-                                    >
-                                        <Map className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                        <div className="text-left">
-                                            <span className="block text-sm font-bold text-white group-hover:text-amber-200">Explore World Map</span>
-                                            <span className="block text-[10px] text-amber-500/70">Pan, zoom, and study the globe freely</span>
-                                        </div>
-                                    </button>
-                                </div>
-
-                            </div>
-                        </div>
-
-                        {/* Right Column: Settings & Actions */}
-                        <div className="flex-1 flex flex-col bg-white/5 rounded-2xl p-6 border border-white/5 overflow-y-auto scrollbar-hide">
-                            {gameStatus === 'ended' && (
-                                <div className="mb-6 p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-                                    <p className="text-emerald-400 text-xs uppercase tracking-widest mb-1 font-bold">Previous Run</p>
-                                    <div className="flex items-baseline gap-2">
-                                        <span className="text-4xl font-mono font-bold text-white">{score}</span>
-                                        <span className="text-sm text-slate-400">/ {totalCountries}</span>
-                                    </div>
-                                    <button
-                                      onClick={() => {
-                                        const text = generateShareText(score, totalCountries, foundCountries, countries, continentFilter);
-                                        navigator.clipboard.writeText(text);
-                                        alert("Result copied to clipboard!");
-                                      }}
-                                      className="mt-3 text-xs flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-bold uppercase tracking-wide transition-colors"
-                                    >
-                                      <Share2 className="w-3 h-3" />
-                                      Share Result
-                                    </button>
-                                </div>
-                            )}
-
-                            <div className="flex-1">
-                                <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                    <Globe className="w-4 h-4 text-emerald-500" />
-                                    Game Settings
-                                </h2>
-                                
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Region</label>
-                                        <select 
-                                            value={continentFilter} 
-                                            onChange={(e) => setContinentFilter(e.target.value)}
-                                            className="w-full bg-zinc-900 border border-white/10 text-slate-200 text-sm rounded-xl p-3 focus:outline-none focus:border-emerald-500/50 transition-colors"
-                                        >
-                                            <option value="All">Global - All Countries</option>
-                                            <option value="Europe">Europe</option>
-                                            <option value="Asia">Asia</option>
-                                            <option value="Africa">Africa</option>
-                                            <option value="North America">North America</option>
-                                            <option value="South America">South America</option>
-                                            <option value="Oceania">Oceania</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Duration</label>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {[300, 600, 900, 1200, 1800, 3600].map(time => (
-                                                <button
-                                                    key={time}
-                                                    onClick={() => setTimeLimit(time)}
-                                                    className={`py-2 rounded-lg text-xs font-bold transition-all border ${
-                                                        timeLimit === time 
-                                                            ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' 
-                                                            : 'bg-zinc-900 border-white/10 text-slate-400 hover:border-white/20'
-                                                    }`}
-                                                >
-                                                    {time / 60}m
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="mt-6 pt-6 border-t border-white/5">
-                                    <h3 className="text-sm font-bold text-amber-500 mb-3 flex items-center gap-2">
-                                        <Trophy className="w-4 h-4" />
-                                        Scoring System
-                                    </h3>
-                                    <div className="space-y-2 text-xs text-slate-400">
-                                        <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
-                                            <span>Base Score</span>
-                                            <span className="font-mono text-white font-bold">+10 pts / country</span>
-                                        </div>
-                                        <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
-                                            <span>Flag Bonus</span>
-                                            <span className="font-mono text-amber-400 font-bold">+50 pts / flag</span>
-                                        </div>
-                                        <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
-                                            <span>Speed Run Bonus</span>
-                                            <span className="font-mono text-emerald-400 font-bold">+2 pts / sec left</span>
-                                        </div>
-                                        <p className="text-[10px] text-slate-500 italic mt-1 text-center">
-                                            *Speed bonus only applies if ALL countries are found!
-                                        </p>
                                     </div>
                                 </div>
                             </div>
-
-                            <button 
-                                onClick={onStart}
-                                className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-zinc-900 font-black text-lg uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98] mt-6"
-                            >
-                                {gameStatus === 'ended' ? 'Play Again' : 'Start Game'}
-                            </button>
-                        </div>
+                        )}
                       </div>
                     )}
 

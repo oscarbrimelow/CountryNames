@@ -11,11 +11,37 @@ const MapBoard = ({
   setZoom, 
   center, 
   setCenter,
-  filterContinent
+  filterContinent,
+  mapMode = 'game' // 'game' or 'explore'
 }) => {
   
+  // Color Palettes
+  const colors = {
+    game: {
+      bg: "bg-zinc-950",
+      default: "#27272a", // Zinc-800
+      found: "#10b981",   // Emerald-500
+      missed: "#ef4444",  // Red-500
+      stroke: "#3f3f46",  // Zinc-700
+      foundStroke: "#34d399", // Emerald-400
+      hover: "#3f3f46"    // Zinc-700 (subtle)
+    },
+    explore: {
+      bg: "bg-sky-950",   // Deep Ocean
+      default: "#d4d4d8", // Zinc-300 (Land)
+      found: "#d4d4d8",   // No "found" state in explore
+      missed: "#d4d4d8",
+      stroke: "#a1a1aa",  // Zinc-400
+      foundStroke: "#a1a1aa",
+      hover: "#fbbf24",   // Amber-400 (Highlight)
+      pressed: "#f59e0b"  // Amber-500
+    }
+  };
+
+  const theme = colors[mapMode] || colors.game;
+
   return (
-    <div className="w-full h-full bg-zinc-950 rounded-none overflow-hidden relative">
+    <div className={`w-full h-full ${theme.bg} rounded-none overflow-hidden relative transition-colors duration-1000`}>
       <ComposableMap projection="geoMercator" className="w-full h-full">
         <ZoomableGroup 
           zoom={zoom} 
@@ -59,23 +85,29 @@ const MapBoard = ({
                     onClick={handleGeoClick}
                     style={{
                       default: {
-                        fill: isFound ? "#10b981" : (isMissed ? "#ef4444" : "#27272a"), // Emerald-500 : Red-500 : Zinc-800
+                        fill: mapMode === 'game' 
+                              ? (isFound ? theme.found : (isMissed ? theme.missed : theme.default))
+                              : theme.default,
                         outline: "none",
-                        stroke: isFound ? "#34d399" : "#3f3f46", // Emerald-400 : Zinc-700
+                        stroke: mapMode === 'game' 
+                                ? (isFound ? theme.foundStroke : theme.stroke)
+                                : theme.stroke,
                         strokeWidth: 0.5,
-                        transition: "all 0.5s ease",
-                        filter: isFound ? "drop-shadow(0 0 6px rgba(16, 185, 129, 0.5))" : "none"
+                        transition: "all 0.3s ease",
+                        filter: mapMode === 'game' && isFound ? "drop-shadow(0 0 6px rgba(16, 185, 129, 0.5))" : "none"
                       },
                       hover: {
-                        fill: isFound ? "#059669" : (isMissed ? "#dc2626" : "#3f3f46"), // Emerald-600 : Red-600 : Zinc-700
+                        fill: mapMode === 'game'
+                              ? (isFound ? "#059669" : (isMissed ? "#dc2626" : "#3f3f46"))
+                              : theme.hover,
                         outline: "none",
-                        stroke: "#71717a", // Zinc-500
+                        stroke: mapMode === 'game' ? "#71717a" : "#ffffff",
                         strokeWidth: 1,
                         cursor: "pointer",
-                        filter: isFound ? "drop-shadow(0 0 8px rgba(16, 185, 129, 0.7))" : "none"
+                        filter: mapMode === 'game' && isFound ? "drop-shadow(0 0 8px rgba(16, 185, 129, 0.7))" : "drop-shadow(0 0 8px rgba(0,0,0,0.2))"
                       },
                       pressed: {
-                        fill: "#047857", // Emerald-700
+                        fill: mapMode === 'game' ? "#047857" : theme.pressed,
                         outline: "none"
                       }
                     }}
