@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Timer, Trophy, Activity, Play, SkipForward, BarChart2, List, X, Share2, Flag, User, Globe, Map, Navigation, Lock, Info, ShieldAlert, LogOut } from 'lucide-react';
+import { Timer, Trophy, Activity, Play, SkipForward, BarChart2, List, X, Share2, Flag, User, Globe, Map, Navigation, Lock, Info, ShieldAlert, LogOut, BookOpen, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const GameUI = ({ 
@@ -38,6 +38,7 @@ const GameUI = ({
   const [inputStyle, setInputStyle] = useState("normal");
   const [activeTab, setActiveTab] = useState('play'); // 'play', 'leaderboard', 'account', 'about'
   const [selectedMode, setSelectedMode] = useState('classic');
+  const [viewingMap, setViewingMap] = useState(false);
   const inputRef = useRef(null);
 
   // Auto-focus logic
@@ -127,6 +128,19 @@ const GameUI = ({
           )}
         </button>
       </div>
+
+      {/* Back to Menu Button - Only when viewing map */}
+      {viewingMap && gameStatus !== 'playing' && (
+        <div className="absolute top-6 left-6 pointer-events-auto z-50">
+            <button 
+                onClick={() => setViewingMap(false)}
+                className="flex items-center gap-2 px-6 py-3 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-full shadow-2xl text-white hover:bg-zinc-800 transition-all font-bold group"
+            >
+                <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                Back to Menu
+            </button>
+        </div>
+      )}
 
       {/* Top Floating Stats Bar - Only when playing or ended */}
       {(gameStatus === 'playing' || gameStatus === 'ended') && (
@@ -275,7 +289,7 @@ const GameUI = ({
       )}
 
       {/* Start / Menu Screen - Overlay */}
-      {gameStatus !== 'playing' && (
+      {gameStatus !== 'playing' && !viewingMap && (
         <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm z-50 flex items-center justify-center pointer-events-auto p-4">
             <motion.div 
                 initial={{ scale: 0.9, opacity: 0 }}
@@ -317,34 +331,81 @@ const GameUI = ({
                     {/* PLAY TAB */}
                     {activeTab === 'play' && (
                       <div className="h-full flex flex-col md:flex-row gap-6 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
-                        {/* Left Column: Game Modes */}
+                        {/* Left Column: Game Modes & Sections */}
                         <div className="flex-1 overflow-y-auto pr-2 scrollbar-hide">
-                            <div className="grid grid-cols-1 gap-3">
-                                {gameModes.map(mode => (
-                                    <button
-                                        key={mode.id}
-                                        onClick={() => mode.status === 'active' && setSelectedMode(mode.id)}
-                                        className={`relative group p-5 rounded-2xl border text-left transition-all ${
-                                            selectedMode === mode.id 
-                                                ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/10' 
-                                                : 'bg-white/5 border-white/5 hover:bg-white/10'
-                                        } ${mode.status !== 'active' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                        <div className="flex items-start justify-between mb-2">
-                                            <div className={`p-2 rounded-xl ${selectedMode === mode.id ? 'bg-emerald-500 text-white' : 'bg-zinc-800 text-slate-400'}`}>
-                                                <mode.icon className="w-5 h-5" />
-                                            </div>
-                                            {mode.status !== 'active' && (
-                                                <div className="px-2 py-1 bg-zinc-900 rounded-md border border-white/10 flex items-center gap-1">
-                                                    <Lock className="w-3 h-3 text-slate-500" />
-                                                    <span className="text-[10px] font-bold text-slate-500 uppercase">Coming Soon</span>
+                            <div className="flex flex-col gap-6">
+                                
+                                {/* Quizzes Section */}
+                                <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                                    <h3 className="text-sm font-bold text-emerald-500 mb-3 flex items-center gap-2">
+                                        <Activity className="w-4 h-4" />
+                                        Quizzes
+                                    </h3>
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {gameModes.map(mode => (
+                                            <button
+                                                key={mode.id}
+                                                onClick={() => mode.status === 'active' && setSelectedMode(mode.id)}
+                                                className={`relative group p-4 rounded-xl border text-left transition-all ${
+                                                    selectedMode === mode.id 
+                                                        ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/10' 
+                                                        : 'bg-white/5 border-white/5 hover:bg-white/10'
+                                                } ${mode.status !== 'active' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2 rounded-lg ${selectedMode === mode.id ? 'bg-emerald-500 text-white' : 'bg-zinc-800 text-slate-400'}`}>
+                                                        <mode.icon className="w-4 h-4" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center justify-between">
+                                                            <h3 className={`text-sm font-bold ${selectedMode === mode.id ? 'text-white' : 'text-slate-300'}`}>{mode.name}</h3>
+                                                            {mode.status !== 'active' && (
+                                                                <Lock className="w-3 h-3 text-slate-500" />
+                                                            )}
+                                                        </div>
+                                                        <p className="text-[10px] text-slate-500 leading-tight mt-0.5">{mode.description}</p>
+                                                    </div>
                                                 </div>
-                                            )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Learn Section */}
+                                <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                                    <h3 className="text-sm font-bold text-blue-400 mb-3 flex items-center gap-2">
+                                        <BookOpen className="w-4 h-4" />
+                                        Learn
+                                    </h3>
+                                    <div className="p-6 bg-zinc-900/50 rounded-xl text-center border border-dashed border-white/10 flex flex-col items-center justify-center gap-2 group cursor-not-allowed">
+                                        <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500/20 transition-colors">
+                                            <BookOpen className="w-5 h-5" />
                                         </div>
-                                        <h3 className={`text-base font-bold mb-1 ${selectedMode === mode.id ? 'text-white' : 'text-slate-300'}`}>{mode.name}</h3>
-                                        <p className="text-xs text-slate-500 leading-relaxed">{mode.description}</p>
+                                        <div>
+                                            <span className="text-xs font-bold text-slate-400 block">Interactive Lessons</span>
+                                            <span className="text-[10px] text-slate-600 uppercase tracking-widest font-bold">Coming Soon</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* See Map Section */}
+                                <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                                    <h3 className="text-sm font-bold text-amber-500 mb-3 flex items-center gap-2">
+                                        <Map className="w-4 h-4" />
+                                        See Map
+                                    </h3>
+                                    <button
+                                        onClick={() => setViewingMap(true)}
+                                        className="w-full p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20 text-amber-400 border border-amber-500/20 rounded-xl transition-all flex items-center justify-center gap-3 group"
+                                    >
+                                        <Map className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                        <div className="text-left">
+                                            <span className="block text-sm font-bold text-white group-hover:text-amber-200">Explore World Map</span>
+                                            <span className="block text-[10px] text-amber-500/70">Pan, zoom, and study the globe freely</span>
+                                        </div>
                                     </button>
-                                ))}
+                                </div>
+
                             </div>
                         </div>
 
