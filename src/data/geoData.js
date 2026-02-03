@@ -1,4 +1,4 @@
-export const geoData = {
+const geoData = {
   "CHN": { pop: 1444216107, coords: [104.1954, 35.8617] },
   "IND": { pop: 1393409038, coords: [78.9629, 20.5937] },
   "USA": { pop: 332915073, coords: [-95.7129, 37.0902] },
@@ -148,4 +148,5 @@ export const geoData = {
   // Add more as needed
 };
 
+// Expose to Global Scope
 window.geoData = geoData;

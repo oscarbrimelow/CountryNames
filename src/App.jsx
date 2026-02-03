@@ -9,8 +9,6 @@ import { Map as MapIcon, Moon, Sun } from 'lucide-react';
 // const countries = window.countries;
 // const normalize = window.normalize;
 
-import { geoData } from './data/geoData';
-
 function App() {
   const MapBoard = window.MapBoard;
   const GameUI = window.GameUI;
@@ -22,12 +20,8 @@ function App() {
   const AboutModal = window.AboutModal;
   const countries = window.countries || [];
   const normalize = window.normalize;
+  const geoData = window.geoData || {};
   const { levenshteinDistance } = window.gameHelpers || {};
-
-  // Attach geoData to window for other components if needed
-  if (typeof window !== 'undefined' && !window.geoData) {
-      window.geoData = geoData;
-  }
 
   // Auth State
   const [user, setUser] = useState(null);
