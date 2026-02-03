@@ -289,36 +289,53 @@ function App() {
     const totalPoints = basePoints + flagPoints + timePoints;
 
     // Prepare Score Data
-    if (displayUser && window.db) {
-      const scoreData = {
+    const scoreData = {
+      userId: displayUser ? displayUser.uid : null,
+      userName: displayUser ? (displayUser.displayName || 'Anonymous') : 'Guest',
+      photoURL: displayUser ? displayUser.photoURL : null,
+      countryCode: displayUser ? (displayUser.countryCode || null) : null,
+      score: effectiveFound.length,
+      total: targetList.length,
+      region: (gameMode === 'flags' && (flagSettings?.filter === '25' || flagSettings?.filter === '50')) ? 'All' : continentFilter,
+      difficulty: flagSettings?.filter || 'All',
+      duration: timeLimit,
+      points: totalPoints,
+      date: window.firebase.firestore.FieldValue.serverTimestamp(),
+      mode: gameMode // Add mode to score data
+    };
+
+    setPendingScore(scoreData);
+    setShowPublish(true);
+    
+    if (!displayUser) {
+        setBonusMessage(`Game Over! ${totalPoints} pts.`);
+        setTimeout(() => setBonusMessage(null), 5000);
+    }
+  }, [activeCountries, foundCountries, displayUser, continentFilter, timeLimit, flagBonusCount, timeLeft, gameMode, quizCountries, flagSettings]);
+
+  const confirmPublish = () => {
+    if (!pendingScore) return;
+    
+    if (!displayUser) {
+        setShowAuth(true);
+        setShowPublish(false); // Close publish modal to show auth
+        // Keep pendingScore so we can publish after login? 
+        // Logic for post-login publish would need more state, for now just let them login and they can try again via Previous Run button
+        return;
+    }
+
+    if (!window.db) return;
+    
+    // Update userId if it was null when created
+    const finalScore = {
+        ...pendingScore,
         userId: displayUser.uid,
         userName: displayUser.displayName || 'Anonymous',
         photoURL: displayUser.photoURL,
-        countryCode: displayUser.countryCode || null,
-        score: effectiveFound.length,
-        total: targetList.length,
-        region: (gameMode === 'flags' && (flagSettings?.filter === '25' || flagSettings?.filter === '50')) ? 'All' : continentFilter,
-        difficulty: flagSettings?.filter || 'All',
-        duration: timeLimit,
-        points: totalPoints,
-        date: window.firebase.firestore.FieldValue.serverTimestamp(),
-        mode: gameMode // Add mode to score data
-      };
+        countryCode: displayUser.countryCode || null
+    };
 
-      setPendingScore(scoreData);
-      setShowPublish(true);
-    } else {
-      if (!displayUser) {
-         setBonusMessage(`Game Over! ${totalPoints} pts. Log in to save!`);
-         setTimeout(() => setBonusMessage(null), 5000);
-      }
-    }
-  }, [activeCountries, foundCountries, displayUser, continentFilter, timeLimit, flagBonusCount, timeLeft]);
-
-  const confirmPublish = () => {
-    if (!pendingScore || !window.db) return;
-    
-    window.db.collection('scores').add(pendingScore)
+    window.db.collection('scores').add(finalScore)
       .then((docRef) => {
         console.log("Score saved successfully with ID:", docRef.id);
         setBonusMessage("Score Published!");
@@ -596,9 +613,13 @@ function App() {
                     </button>
                     <button 
                         onClick={confirmPublish}
-                        className="flex-1 py-4 rounded-xl font-bold bg-emerald-500 text-zinc-900 hover:bg-emerald-400 hover:scale-105 transition-all shadow-lg shadow-emerald-500/20"
+                        className={`flex-1 py-4 rounded-xl font-bold text-zinc-900 transition-all shadow-lg ${
+                            displayUser 
+                                ? 'bg-emerald-500 hover:bg-emerald-400 shadow-emerald-500/20 hover:scale-105' 
+                                : 'bg-amber-500 hover:bg-amber-400 shadow-amber-500/20 hover:scale-105'
+                        }`}
                     >
-                        Publish Score
+                        {displayUser ? 'Publish Score' : 'Sign In to Publish'}
                     </button>
                 </div>
             </div>

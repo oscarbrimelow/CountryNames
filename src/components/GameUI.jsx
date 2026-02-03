@@ -315,7 +315,7 @@ const GameUI = ({
             <motion.div 
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="bg-zinc-900/40 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl max-w-5xl w-full text-center flex flex-col h-[85vh] md:h-auto md:min-h-[600px] overflow-hidden"
+                className="bg-zinc-900/40 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl max-w-5xl w-full text-center flex flex-col h-[85vh] md:h-[800px] md:max-h-[90vh] overflow-hidden"
             >
                 <div className="flex flex-col items-center mb-6">
                     <h1 className="text-4xl md:text-6xl font-black bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent tracking-tighter mb-2">
@@ -448,7 +448,7 @@ const GameUI = ({
                                 </div>
 
                                 {/* Right Column: Settings (Reused) */}
-                                <div className="flex-1 flex flex-col bg-white/5 rounded-2xl p-6 border border-white/5 overflow-y-auto scrollbar-hide">
+                                <div className="flex-1 flex flex-col bg-white/5 rounded-2xl p-6 border border-white/5 overflow-y-auto custom-scrollbar">
                                     {gameStatus === 'ended' && (
                                         <div className="mb-6 p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
                                             <p className="text-emerald-400 text-xs uppercase tracking-widest mb-1 font-bold">Previous Run</p>
@@ -467,6 +467,15 @@ const GameUI = ({
                                               <Share2 className="w-3 h-3" />
                                               Share Result
                                             </button>
+                                            
+                                            {pendingScore && (
+                                                <button
+                                                    onClick={confirmPublish}
+                                                    className="mt-3 w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-900 font-bold rounded-lg transition-colors uppercase tracking-wide text-xs shadow-lg"
+                                                >
+                                                    Publish Score
+                                                </button>
+                                            )}
                                         </div>
                                     )}
 
@@ -642,7 +651,7 @@ const GameUI = ({
 
                     {/* LEADERBOARD TAB */}
                     {activeTab === 'leaderboard' && (
-                        <div className="h-full bg-white/5 rounded-2xl p-4 border border-white/5 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <div className="h-full bg-white/5 rounded-2xl p-4 border border-white/5 animate-in fade-in slide-in-from-bottom-4 duration-300 overflow-y-auto custom-scrollbar">
                              {Leaderboard ? (
                                 <Leaderboard onUserClick={onUserClick} />
                              ) : (
@@ -653,7 +662,7 @@ const GameUI = ({
 
                     {/* ACCOUNT TAB */}
                     {activeTab === 'account' && (
-                        <div className="h-full bg-white/5 rounded-2xl p-6 border border-white/5 overflow-y-auto scrollbar-hide animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <div className="h-full bg-white/5 rounded-2xl p-6 border border-white/5 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-bottom-4 duration-300">
                             {user ? (
                                 <div className="max-w-xl mx-auto">
                                     {UserProfile ? (
@@ -690,7 +699,7 @@ const GameUI = ({
 
                     {/* ABOUT TAB */}
                     {activeTab === 'about' && (
-                        <div className="h-full bg-white/5 rounded-2xl p-6 border border-white/5 overflow-y-auto scrollbar-hide animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <div className="h-full bg-white/5 rounded-2xl p-6 border border-white/5 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-bottom-4 duration-300">
                             <div className="max-w-2xl mx-auto space-y-6 text-slate-300">
                                 <div className="text-center mb-8">
                                     <div className="inline-flex items-center justify-center p-4 bg-emerald-500/10 rounded-full mb-4">
