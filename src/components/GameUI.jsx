@@ -326,6 +326,16 @@ const GameUI = ({
                         </div>
                     </div>
 
+                    <div className="mb-2 mt-4">
+                        <button 
+                            onClick={onShowAuth}
+                            className="w-full py-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 font-medium rounded-xl flex items-center justify-center gap-2 transition-all"
+                        >
+                            <User className="w-4 h-4" />
+                            {user ? 'View Profile' : 'Login / Sign Up'}
+                        </button>
+                    </div>
+
                     <button 
                         onClick={onStart}
                         className="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 transition-all active:scale-95 mt-6"
