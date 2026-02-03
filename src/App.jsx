@@ -16,9 +16,14 @@ function App() {
   const StatsModal = window.StatsModal;
   const CountryList = window.CountryList;
   const ListModal = window.ListModal;
+  const AuthModal = window.AuthModal;
   const countries = window.countries || [];
   const normalize = window.normalize;
   const { levenshteinDistance } = window.gameHelpers || {};
+
+  // Auth State
+  const [user, setUser] = useState(null);
+  const [showAuth, setShowAuth] = useState(false);
 
   // Theme State
   const [darkMode, setDarkMode] = useState(() => {
@@ -86,6 +91,16 @@ function App() {
       localStorage.setItem('theme', 'light');
     }
   }, [darkMode]);
+
+  // Auth Listener
+  useEffect(() => {
+    if (window.auth) {
+      const unsubscribe = window.auth.onAuthStateChanged((user) => {
+        setUser(user);
+      });
+      return () => unsubscribe();
+    }
+  }, []);
 
   // Timer Effect
   useEffect(() => {
@@ -259,6 +274,8 @@ function App() {
           countries={countries}
           activeCountries={activeCountries}
           foundCountries={foundCountries}
+          user={user}
+          onShowAuth={() => setShowAuth(true)}
         />
       </div>
 
@@ -269,6 +286,14 @@ function App() {
       
       {showStats && (
         <StatsModal onClose={() => setShowStats(false)} />
+      )}
+
+      {showAuth && (
+        <AuthModal 
+          isOpen={showAuth} 
+          onClose={() => setShowAuth(false)} 
+          user={user} 
+        />
       )}
 
       {/* Modal Layers */}

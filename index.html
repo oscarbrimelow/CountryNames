@@ -30,6 +30,42 @@
       }
     </script>
 
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+    
+    <script>
+      // --------------------------------------------------------
+      // FIREBASE CONFIGURATION
+      // --------------------------------------------------------
+      const firebaseConfig = { 
+        apiKey: "AIzaSyBiAsLk_UDgLOWGZtWKqTjstWiLu5BNt2o", 
+        authDomain: "geographygame-c65b2.firebaseapp.com", 
+        projectId: "geographygame-c65b2", 
+        storageBucket: "geographygame-c65b2.firebasestorage.app", 
+        messagingSenderId: "538875324090", 
+        appId: "1:538875324090:web:02e5888a569dcd3cbf0483", 
+        measurementId: "G-3293K94M82" 
+      };
+
+      // Initialize Firebase
+      try {
+        if (typeof firebase !== 'undefined') {
+          const app = firebase.initializeApp(firebaseConfig);
+          window.db = firebase.firestore();
+          window.auth = firebase.auth();
+          if (typeof firebase.analytics === 'function') {
+            window.analytics = firebase.analytics();
+          }
+          console.log("Firebase initialized successfully");
+        }
+      } catch (error) {
+        console.error("Firebase initialization error:", error);
+      }
+    </script>
+
     <!-- Import Map for External Libs -->
     <script type="importmap">
     {
@@ -72,6 +108,7 @@
     <script type="text/babel" data-type="module" src="./src/components/MapBoard.jsx?v=6"></script>
     <script type="text/babel" data-type="module" src="./src/components/CountryList.jsx?v=6"></script>
     <script type="text/babel" data-type="module" src="./src/components/ListModal.jsx?v=6"></script>
+    <script type="text/babel" data-type="module" src="./src/components/AuthModal.jsx?v=6"></script>
     <script type="text/babel" data-type="module" src="./src/components/StudyModal.jsx?v=6"></script>
     <script type="text/babel" data-type="module" src="./src/components/StatsModal.jsx?v=6"></script>
     <script type="text/babel" data-type="module" src="./src/components/GameUI.jsx?v=6"></script>

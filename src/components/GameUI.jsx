@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Timer, Trophy, Activity, Play, SkipForward, BarChart2, List, X, Share2, Flag } from 'lucide-react';
+import { Timer, Trophy, Activity, Play, SkipForward, BarChart2, List, X, Share2, Flag, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const GameUI = ({ 
@@ -22,7 +22,9 @@ const GameUI = ({
   bonusMessage,
   countries,
   activeCountries,
-  foundCountries
+  foundCountries,
+  user,
+  onShowAuth
 }) => {
   const { getFlagUrl, generateShareText } = window.gameHelpers || {};
   
@@ -85,6 +87,32 @@ const GameUI = ({
   return (
     <div className="w-full h-full relative pointer-events-none">
       
+      {/* Auth Button - Always Visible */}
+      <div className="absolute top-6 right-6 pointer-events-auto z-50">
+        <button 
+          onClick={onShowAuth}
+          className={`flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md border shadow-xl transition-all ${
+            user 
+              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20' 
+              : 'bg-zinc-900/40 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
+          }`}
+        >
+          {user ? (
+            <>
+              <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-zinc-950 font-bold text-xs">
+                {user.email ? user.email[0].toUpperCase() : 'U'}
+              </div>
+              <span className="text-sm font-medium hidden sm:inline">{user.email?.split('@')[0]}</span>
+            </>
+          ) : (
+            <>
+              <User className="w-4 h-4" />
+              <span className="text-sm font-medium">Sign In</span>
+            </>
+          )}
+        </button>
+      </div>
+
       {/* Top Floating Stats Bar - Only when playing or ended */}
       {(gameStatus === 'playing' || gameStatus === 'ended') && (
         <motion.div 
