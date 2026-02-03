@@ -4,32 +4,55 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const StudyModal = ({ country, onClose }) => {
   const [wikiData, setWikiData] = useState(null);
+  const [currencyData, setCurrencyData] = useState(null);
   const [loading, setLoading] = useState(false);
+  
+  const geoData = window.geoData || {};
+  const countryGeo = country ? geoData[country.alpha3] : null;
 
   useEffect(() => {
     if (country) {
       setLoading(true);
       setWikiData(null);
+      setCurrencyData(null);
       
-      const fetchWiki = async () => {
+      const fetchData = async () => {
         try {
-          const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(country.name)}`);
-          if (res.ok) {
-            const data = await res.json();
+          // Parallel fetch for Wiki and REST Countries
+          const [wikiRes, restRes] = await Promise.allSettled([
+            fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(country.name)}`),
+            fetch(`https://restcountries.com/v3.1/alpha/${country.alpha3}`)
+          ]);
+
+          // Handle Wiki Response
+          if (wikiRes.status === 'fulfilled' && wikiRes.value.ok) {
+            const data = await wikiRes.value.json();
             setWikiData({
               extract: data.extract,
               thumbnail: data.thumbnail?.source,
               url: data.content_urls?.desktop?.page
             });
           }
+
+          // Handle REST Countries Response (for Currency)
+          if (restRes.status === 'fulfilled' && restRes.value.ok) {
+            const data = await restRes.value.json();
+            if (data && data[0] && data[0].currencies) {
+                const currencies = Object.values(data[0].currencies)
+                    .map(c => `${c.name} (${c.symbol})`)
+                    .join(', ');
+                setCurrencyData(currencies);
+            }
+          }
+
         } catch (e) {
-          console.error("Wiki fetch error", e);
+          console.error("Data fetch error", e);
         } finally {
           setLoading(false);
         }
       };
       
-      fetchWiki();
+      fetchData();
     }
   }, [country]);
 
@@ -112,11 +135,15 @@ const StudyModal = ({ country, onClose }) => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20">
                         <span className="text-xs font-bold text-emerald-500 uppercase tracking-widest block mb-1">Population</span>
-                        <p className="text-lg font-mono text-white">Coming Soon</p>
+                        <p className="text-lg font-mono text-white">
+                            {countryGeo?.pop ? countryGeo.pop.toLocaleString() : "N/A"}
+                        </p>
                     </div>
                     <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20">
                         <span className="text-xs font-bold text-blue-500 uppercase tracking-widest block mb-1">Currency</span>
-                        <p className="text-lg font-mono text-white">Coming Soon</p>
+                        <p className="text-lg font-mono text-white">
+                            {currencyData || (loading ? "Loading..." : "N/A")}
+                        </p>
                     </div>
                 </div>
 

@@ -6,6 +6,8 @@ const Leaderboard = ({ onClose, initialFilter = 'All', onUserClick }) => {
   const [scores, setScores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState(initialFilter); // 'All', 'Europe', etc.
+  const [gameMode, setGameMode] = useState('classic'); // 'classic' or 'flags'
+  const [difficulty, setDifficulty] = useState('All'); // 'All', '25', '50'
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const { getFlagUrl } = window.gameHelpers || {};
@@ -25,28 +27,34 @@ const Leaderboard = ({ onClose, initialFilter = 'All', onUserClick }) => {
 
       setLoading(true);
       try {
-        console.log(`Fetching scores for region: ${filter}`);
+        console.log(`Fetching scores for mode: ${gameMode}, diff: ${difficulty}, region: ${filter}`);
         let query = window.db.collection('scores');
 
-        if (filter === 'All') {
-          // For 'All', we can sort by score directly as it uses a single-field index
-          query = query.orderBy('score', 'desc').limit(50);
-        } else {
-          // For specific regions, filtering by region AND sorting by score requires a Composite Index.
-          // To avoid forcing the user to create an index, we fetch by region (limit 500) 
-          // and sort on the client side. 
-          query = query.where('region', '==', filter).limit(500);
+        // Apply filters
+        // Note: We use client-side sorting to avoid needing complex composite indexes for every combination
+        query = query.where('mode', '==', gameMode);
+
+        if (gameMode === 'flags') {
+             // For flags, we strictly respect the difficulty filter
+             query = query.where('difficulty', '==', difficulty);
         }
 
+        if (filter !== 'All') {
+            query = query.where('region', '==', filter);
+        }
+
+        // Limit to 500 to fetch a good chunk, then sort client-side
+        query = query.limit(500);
+
         const snapshot = await query.get();
-        console.log(`Fetched ${snapshot.size} scores for ${filter}`);
+        console.log(`Fetched ${snapshot.size} scores`);
         
         let data = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
 
-        // Client-side sort for filtered results (or re-sort for safety)
+        // Client-side sort for filtered results
         data.sort((a, b) => b.score - a.score);
         
         // Limit to 50 after sorting
@@ -63,7 +71,7 @@ const Leaderboard = ({ onClose, initialFilter = 'All', onUserClick }) => {
     };
 
     fetchScores();
-  }, [filter, refreshTrigger]);
+  }, [filter, gameMode, difficulty, refreshTrigger]);
 
   const refresh = () => {
     setRefreshTrigger(prev => prev + 1);
@@ -77,27 +85,79 @@ const Leaderboard = ({ onClose, initialFilter = 'All', onUserClick }) => {
 
   return (
     <div className="h-full flex flex-col">
-       {/* Filters */}
-       <div className="flex justify-between items-center mb-4 px-1">
-         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide flex-1">
+       {/* Filters Container */}
+       <div className="flex flex-col gap-3 mb-4 px-1">
+         
+         {/* Row 1: Game Mode & Refresh */}
+         <div className="flex justify-between items-center">
+            <div className="flex gap-1 bg-white/5 p-1 rounded-lg">
+                <button 
+                    onClick={() => setGameMode('classic')}
+                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                        gameMode === 'classic' 
+                        ? 'bg-emerald-500 text-zinc-900 shadow-lg' 
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                    Classic
+                </button>
+                <button 
+                    onClick={() => setGameMode('flags')}
+                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                        gameMode === 'flags' 
+                        ? 'bg-emerald-500 text-zinc-900 shadow-lg' 
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                    Flag Quiz
+                </button>
+            </div>
+
+            <button 
+                onClick={refresh}
+                className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                title="Refresh Leaderboard"
+            >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </button>
+         </div>
+
+         {/* Row 2: Difficulty (Flag Mode Only) */}
+         {gameMode === 'flags' && (
+             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                {['All', '25', '50'].map(diff => (
+                  <button
+                    key={diff}
+                    onClick={() => setDifficulty(diff)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors border ${
+                      difficulty === diff
+                        ? 'bg-emerald-500/10 border-emerald-500 text-emerald-500' 
+                        : 'bg-transparent border-slate-700 text-slate-400 hover:border-slate-500'
+                    }`}
+                  >
+                    {diff === 'All' ? 'All Difficulties' : `Top ${diff}`}
+                  </button>
+                ))}
+             </div>
+         )}
+
+         {/* Row 3: Region Filters */}
+         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {['All', 'Europe', 'Asia', 'Africa', 'North America', 'South America', 'Oceania'].map(region => (
               <button
                 key={region}
                 onClick={() => setFilter(region)}
-                className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
+                className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors border ${
                   filter === region 
-                    ? 'bg-emerald-500 text-zinc-900' 
-                    : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                    ? 'bg-emerald-500/10 border-emerald-500 text-emerald-500' 
+                    : 'bg-transparent border-slate-700 text-slate-400 hover:border-slate-500'
                 }`}
               >
                 {region}
               </button>
             ))}
          </div>
-         <button 
-            onClick={refresh}
-            className="p-2 ml-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
-            title="Refresh Leaderboard"
+       </div>
          >
             <Clock className="w-4 h-4" />
          </button>

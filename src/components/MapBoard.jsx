@@ -124,22 +124,11 @@ const MapBoard = ({
           </Geographies>
           {highlightCountry && flagLocation && flagUrl && (
             <Marker coordinates={flagLocation}>
-               <foreignObject x="-30" y="-50" width="60" height="40">
-                 <div className="w-full h-full rounded-md overflow-hidden border-2 border-white shadow-xl bg-zinc-900 animate-bounce">
+               <foreignObject x="-15" y="-25" width="30" height="20">
+                 <div className="w-full h-full rounded-sm overflow-hidden border border-white shadow-lg bg-zinc-900 animate-[bounce_2s_infinite]">
                     <img src={flagUrl} alt="Flag" className="w-full h-full object-cover" />
                  </div>
                </foreignObject>
-               <g
-                fill="none"
-                stroke="#f59e0b"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                transform="translate(-12, -10)"
-               >
-                 <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z" fill="#f59e0b" fillOpacity="0.5" />
-                 <circle cx="12" cy="10" r="3" fill="#fff" />
-               </g>
             </Marker>
           )}
         </ZoomableGroup>

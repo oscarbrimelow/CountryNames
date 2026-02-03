@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Map as MapIcon, Moon, Sun } from 'lucide-react';
+import { Map as MapIcon, Moon, Sun, ArrowLeft } from 'lucide-react';
 
 // Access Globals inside component to avoid race conditions
 // const MapBoard = window.MapBoard;
@@ -297,7 +297,8 @@ function App() {
         countryCode: displayUser.countryCode || null,
         score: effectiveFound.length,
         total: targetList.length,
-        region: continentFilter,
+        region: (gameMode === 'flags' && (flagSettings?.filter === '25' || flagSettings?.filter === '50')) ? 'All' : continentFilter,
+        difficulty: flagSettings?.filter || 'All',
         duration: timeLimit,
         points: totalPoints,
         date: window.firebase.firestore.FieldValue.serverTimestamp(),
@@ -429,7 +430,12 @@ function App() {
 
     // Check if clicked country is in our data
     // Geo ID is usually string, our ID is string.
-    const country = countries.find(c => c.id === geo.id || c.alpha3 === geo.properties.ISO_A3);
+    // Ensure loose comparison or string conversion
+    let country = countries.find(c => c.id === String(geo.id));
+    
+    if (!country && geo.properties) {
+        country = countries.find(c => c.alpha3 === geo.properties.ISO_A3 || c.name === geo.properties.NAME);
+    }
     
     if (country) {
       setSelectedCountry(country);
@@ -478,21 +484,31 @@ function App() {
 
       {/* Map Layer - Always Rendered but controlled */}
       <div className={`absolute inset-0 transition-all duration-700 ${viewingMap ? 'z-40' : 'z-0'}`}>
+          {viewingMap && (
+            <div className="absolute top-4 left-4 z-50">
+               <button 
+                 onClick={() => setViewingMap(false)}
+                 className="px-4 py-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-lg text-white font-bold text-sm hover:bg-zinc-800 transition-all flex items-center gap-2 shadow-lg"
+               >
+                 <ArrowLeft className="w-4 h-4" />
+                 Back to Menu
+               </button>
+            </div>
+          )}
+          
           <MapBoard 
             foundCountries={foundCountries} 
             missedCountries={missedCountries}
-            onCountryClick={(country) => {
-               setSelectedCountry(country);
-            }}
+            onCountryClick={handleCountryClick}
             zoom={zoom}
             setZoom={setZoom}
             center={center}
             setCenter={setCenter}
             filterContinent={continentFilter}
-            mapMode={viewingMap && gameStatus !== 'playing' ? 'explore' : 'game'}
-            highlightCountry={gameMode === 'flags' && flagQuizTarget ? flagQuizTarget.id : null}
-            flagLocation={gameMode === 'flags' && flagQuizTarget ? flagQuizTarget.coords : null}
-            flagUrl={gameMode === 'flags' && flagQuizTarget ? window.gameHelpers?.getFlagUrl(flagQuizTarget.alpha3) : null}
+            mapMode={viewingMap ? 'explore' : 'game'}
+            highlightCountry={gameMode === 'flags' && gameStatus === 'playing' && flagQuizTarget ? flagQuizTarget.id : null}
+            flagLocation={gameMode === 'flags' && gameStatus === 'playing' && flagQuizTarget ? flagQuizTarget.coords : null}
+            flagUrl={gameMode === 'flags' && gameStatus === 'playing' && flagQuizTarget ? window.gameHelpers?.getFlagUrl(flagQuizTarget.alpha3) : null}
           />
       </div>
 
