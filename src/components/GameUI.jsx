@@ -414,6 +414,30 @@ const GameUI = ({
                                         </div>
                                     </div>
                                 </div>
+
+                                <div className="mt-6 pt-6 border-t border-white/5">
+                                    <h3 className="text-sm font-bold text-amber-500 mb-3 flex items-center gap-2">
+                                        <Trophy className="w-4 h-4" />
+                                        Scoring System
+                                    </h3>
+                                    <div className="space-y-2 text-xs text-slate-400">
+                                        <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
+                                            <span>Base Score</span>
+                                            <span className="font-mono text-white font-bold">+10 pts / country</span>
+                                        </div>
+                                        <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
+                                            <span>Flag Bonus</span>
+                                            <span className="font-mono text-amber-400 font-bold">+50 pts / flag</span>
+                                        </div>
+                                        <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
+                                            <span>Speed Run Bonus</span>
+                                            <span className="font-mono text-emerald-400 font-bold">+2 pts / sec left</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-500 italic mt-1 text-center">
+                                            *Speed bonus only applies if ALL countries are found!
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
 
                             <button 
@@ -491,9 +515,17 @@ const GameUI = ({
                                         <Globe className="w-4 h-4" />
                                         Why this was created
                                     </h3>
-                                    <p className="text-sm leading-relaxed">
+                                    <p className="text-sm leading-relaxed mb-4">
                                         This project was built out of a passion for geography and learning. The goal is to provide a fun, interactive way for people to test their knowledge of the world map and learn about different countries, flags, and facts.
                                     </p>
+                                    <div className="bg-black/20 rounded-lg p-3 text-xs border border-white/5">
+                                        <strong className="text-emerald-400 block mb-1 uppercase tracking-wider">Game Rules</strong>
+                                        <ul className="list-disc list-inside space-y-1 text-slate-400">
+                                            <li>Use the common, English name for countries.</li>
+                                            <li>Must be a sovereign nation (e.g., Scotland and England are part of the UK).</li>
+                                            <li>Territories and dependencies are generally not included unless specified.</li>
+                                        </ul>
+                                    </div>
                                 </div>
 
                                 <div className="bg-amber-500/10 rounded-xl p-6 border border-amber-500/30 relative overflow-hidden">
