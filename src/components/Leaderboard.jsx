@@ -160,6 +160,10 @@ const Leaderboard = ({ onClose, initialFilter = 'All', onUserClick }) => {
                       {score.region}
                     </span>
                     <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {score.duration ? `${Math.floor(score.duration/60)}m` : '∞'}
+                    </span>
+                    <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
                       {formatDate(score.date)}
                     </span>
@@ -170,6 +174,11 @@ const Leaderboard = ({ onClose, initialFilter = 'All', onUserClick }) => {
                   <div className="text-xl font-bold text-emerald-400 font-mono">
                     {score.score}
                   </div>
+                  {score.points > 0 && (
+                      <div className="text-[10px] text-amber-400 font-bold tracking-wider uppercase">
+                          {score.points} pts
+                      </div>
+                  )}
                   <div className="text-xs text-slate-500 font-mono">
                     / {score.total}
                   </div>

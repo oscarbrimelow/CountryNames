@@ -198,26 +198,29 @@ const UserProfile = ({ user, isEditable, onSave }) => {
                             placeholder="Tell us about yourself..."
                         />
                     ) : (
-                        <div className="w-full px-4 py-3 bg-black/20 border border-white/5 rounded-xl text-slate-300 min-h-[120px] whitespace-pre-wrap">
-                            {bio || 'No bio available.'}
+                        <div className="w-full px-4 py-3 bg-black/20 border border-white/5 rounded-xl text-slate-300 min-h-[80px]">
+                            {bio || 'No bio yet.'}
                         </div>
                     )}
                 </div>
             </div>
 
+            {/* Actions */}
             {isEditable && (
-                <button 
-                    onClick={handleSaveProfile}
-                    disabled={loading}
-                    className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-zinc-900 font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
-                >
-                    {loading ? 'Saving...' : (
-                        <>
+                <div className="pt-4 flex justify-end">
+                    <button 
+                        onClick={handleSaveProfile}
+                        disabled={loading}
+                        className="flex items-center gap-2 px-8 py-3 bg-emerald-500 hover:bg-emerald-400 text-zinc-900 font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {loading ? (
+                            <div className="w-5 h-5 border-2 border-zinc-900/30 border-t-zinc-900 rounded-full animate-spin"></div>
+                        ) : (
                             <Save className="w-5 h-5" />
-                            Save Changes
-                        </>
-                    )}
-                </button>
+                        )}
+                        Save Changes
+                    </button>
+                </div>
             )}
         </div>
     </div>

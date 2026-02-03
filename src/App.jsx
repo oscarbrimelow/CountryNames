@@ -59,6 +59,11 @@ function App() {
   const [streakCount, setStreakCount] = useState(0);
   const [bonusFlagCountry, setBonusFlagCountry] = useState(null);
   const [bonusMessage, setBonusMessage] = useState(null);
+  const [flagBonusCount, setFlagBonusCount] = useState(0); // Track total bonus flags collected
+
+  // Score Publishing State
+  const [showPublish, setShowPublish] = useState(false);
+  const [pendingScore, setPendingScore] = useState(null);
 
   // Derived State
   const activeCountries = useMemo(() => {
@@ -157,6 +162,9 @@ function App() {
     setStreakCount(0);
     setBonusFlagCountry(null);
     setBonusMessage(null);
+    setFlagBonusCount(0);
+    setShowPublish(false);
+    setPendingScore(null);
     setZoom(1);
     setCenter([0, 20]);
     
@@ -185,7 +193,19 @@ function App() {
     });
     localStorage.setItem('learning_bank', JSON.stringify(bank));
 
-    // Save to Firestore Leaderboard
+    // Calculate Points
+    // Base: 10 pts per country
+    const basePoints = effectiveFound.length * 10;
+    // Flag Bonus: 50 pts per flag
+    const flagPoints = flagBonusCount * 50;
+    // Time Bonus: 2 pts per second remaining (ONLY if all found)
+    let timePoints = 0;
+    if (effectiveFound.length === activeCountries.length) {
+        timePoints = timeLeft * 2;
+    }
+    const totalPoints = basePoints + flagPoints + timePoints;
+
+    // Prepare Score Data
     if (displayUser && window.db) {
       const scoreData = {
         userId: displayUser.uid,
@@ -196,30 +216,42 @@ function App() {
         total: activeCountries.length,
         region: continentFilter,
         duration: timeLimit,
+        points: totalPoints,
         date: window.firebase.firestore.FieldValue.serverTimestamp()
       };
 
-      console.log("Attempting to save score...", scoreData);
-      
-      window.db.collection('scores').add(scoreData)
+      setPendingScore(scoreData);
+      setShowPublish(true);
+    } else {
+      if (!displayUser) {
+         setBonusMessage(`Game Over! ${totalPoints} pts. Log in to save!`);
+         setTimeout(() => setBonusMessage(null), 5000);
+      }
+    }
+  }, [activeCountries, foundCountries, displayUser, continentFilter, timeLimit, flagBonusCount, timeLeft]);
+
+  const confirmPublish = () => {
+    if (!pendingScore || !window.db) return;
+    
+    window.db.collection('scores').add(pendingScore)
       .then((docRef) => {
         console.log("Score saved successfully with ID:", docRef.id);
-        setBonusMessage("Score Saved to Leaderboard!");
+        setBonusMessage("Score Published!");
         setTimeout(() => setBonusMessage(null), 3000);
+        setShowPublish(false);
+        setPendingScore(null);
       })
       .catch(err => {
         console.error("Error saving score:", err);
-        setBonusMessage("Error saving score!");
+        setBonusMessage("Error publishing score!");
         setTimeout(() => setBonusMessage(null), 3000);
       });
-    } else {
-      console.log("Score not saved. User:", !!displayUser, "DB:", !!window.db);
-      if (!displayUser) {
-         setBonusMessage("Log in to save score!");
-         setTimeout(() => setBonusMessage(null), 3000);
-      }
-    }
-  }, [activeCountries, foundCountries, displayUser, continentFilter, timeLimit]);
+  };
+
+  const cancelPublish = () => {
+    setShowPublish(false);
+    setPendingScore(null);
+  };
 
   const handleInput = (input) => {
     const normalizedInput = normalize(input);
@@ -242,6 +274,7 @@ function App() {
          setBonusMessage("Flag Bonus! +15s");
          setTimeout(() => setBonusMessage(null), 3000);
          setBonusFlagCountry(null);
+         setFlagBonusCount(prev => prev + 1);
       }
       
       // Streak Logic
@@ -393,6 +426,46 @@ function App() {
           />
         )}
       </div>
+
+      {/* Score Publish Modal */}
+      {showPublish && pendingScore && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-zinc-900 border border-emerald-500/30 rounded-3xl p-8 max-w-md w-full shadow-2xl transform scale-100">
+                <h2 className="text-3xl font-black text-center mb-2 bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                    RUN COMPLETE!
+                </h2>
+                <div className="text-center text-slate-400 mb-8 font-light tracking-wide">
+                    Great job, {pendingScore.userName}!
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div className="bg-white/5 rounded-2xl p-4 flex flex-col items-center">
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Score</span>
+                        <span className="text-2xl font-mono font-bold text-white">{pendingScore.score}/{pendingScore.total}</span>
+                    </div>
+                    <div className="bg-white/5 rounded-2xl p-4 flex flex-col items-center border border-amber-500/20">
+                        <span className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-1">Points</span>
+                        <span className="text-2xl font-mono font-bold text-amber-400">{pendingScore.points}</span>
+                    </div>
+                </div>
+
+                <div className="flex gap-4">
+                    <button 
+                        onClick={cancelPublish}
+                        className="flex-1 py-4 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+                    >
+                        Skip
+                    </button>
+                    <button 
+                        onClick={confirmPublish}
+                        className="flex-1 py-4 rounded-xl font-bold bg-emerald-500 text-zinc-900 hover:bg-emerald-400 hover:scale-105 transition-all shadow-lg shadow-emerald-500/20"
+                    >
+                        Publish Score
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 }
