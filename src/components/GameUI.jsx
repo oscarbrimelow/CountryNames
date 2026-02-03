@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Timer, Trophy, Activity, Play, SkipForward, BarChart2, List, X, Share2, Flag, User } from 'lucide-react';
+import { Timer, Trophy, Activity, Play, SkipForward, BarChart2, List, X, Share2, Flag, User, Globe, Map, Navigation, Lock, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const GameUI = ({ 
@@ -25,7 +25,9 @@ const GameUI = ({
   foundCountries,
   user,
   onShowAuth,
-  onShowProfile
+  onShowProfile,
+  onShowAbout,
+  onUserClick
 }) => {
   const { getFlagUrl, generateShareText } = window.gameHelpers || {};
   const Leaderboard = window.Leaderboard;
@@ -34,6 +36,7 @@ const GameUI = ({
   const [shake, setShake] = useState(false);
   const [inputStyle, setInputStyle] = useState("normal"); // normal, close
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'leaderboard'
+  const [selectedMode, setSelectedMode] = useState('classic'); // 'classic', 'flags', 'capitals', 'states'
   const inputRef = useRef(null);
 
   // Auto-focus logic
@@ -86,6 +89,13 @@ const GameUI = ({
 
   const accuracy = foundCount > 0 ? Math.round((foundCount / (foundCount + 0)) * 100) : 100; // Simplified for now
   const progress = totalCountries > 0 ? Math.round((foundCount / totalCountries) * 100) : 0;
+
+  const gameModes = [
+    { id: 'classic', name: 'Name Countries', icon: Globe, description: 'Identify countries on the map', status: 'active' },
+    { id: 'flags', name: 'Flag Quiz', icon: Flag, description: 'Match flags to countries', status: 'coming_soon' },
+    { id: 'capitals', name: 'Capital Cities', icon: Navigation, description: 'Name the capital cities', status: 'coming_soon' },
+    { id: 'states', name: 'State Challenge', icon: Map, description: 'Identify states and provinces', status: 'coming_soon' },
+  ];
 
   return (
     <div className="w-full h-full relative pointer-events-none">
@@ -272,15 +282,17 @@ const GameUI = ({
             <motion.div 
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="bg-zinc-900/40 backdrop-blur-xl border border-white/10 p-8 md:p-12 rounded-3xl shadow-2xl max-w-md w-full text-center"
+                className="bg-zinc-900/40 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl max-w-5xl w-full text-center flex flex-col h-[80vh] md:h-auto md:min-h-[600px]"
             >
-                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-br from-white to-slate-500 bg-clip-text text-transparent mb-2 tracking-tight">
-                    World Quiz
-                </h1>
-                <p className="text-slate-400 mb-6 font-light tracking-wide">Test your geographical knowledge</p>
+                <div className="flex flex-col items-center mb-8">
+                    <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent tracking-tighter mb-2">
+                        GEOMASTER
+                    </h1>
+                    <p className="text-slate-400 font-light tracking-widest uppercase text-sm">The Ultimate Geography Challenge</p>
+                </div>
 
                 {/* Tabs */}
-                <div className="flex p-1 bg-white/5 rounded-xl mb-6">
+                <div className="flex p-1 bg-white/5 rounded-xl mb-8 max-w-md mx-auto w-full">
                   <button 
                     onClick={() => setActiveTab('home')} 
                     className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'home' ? 'bg-zinc-800 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
@@ -296,99 +308,144 @@ const GameUI = ({
                 </div>
 
                 {activeTab === 'home' ? (
-                  <>
-                    {gameStatus === 'ended' && (
-                        <div className="mb-8 p-4 bg-white/5 rounded-xl border border-white/5">
-                            <p className="text-slate-300 text-sm uppercase tracking-widest mb-1">Final Score</p>
-                            <p className="text-4xl font-mono font-bold text-emerald-400">{score} <span className="text-lg text-slate-500">/ {totalCountries}</span></p>
-                            
-                            <button
-                              onClick={() => {
-                                const text = generateShareText(score, totalCountries, foundCountries, countries, continentFilter);
-                                navigator.clipboard.writeText(text);
-                                alert("Result copied to clipboard!");
-                              }}
-                              className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-lg flex items-center justify-center gap-2 mx-auto transition-colors"
-                            >
-                              <Share2 className="w-4 h-4" />
-                              Share Result
-                            </button>
-                        </div>
-                    )}
-
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="text-left">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 block">Region</label>
-                                <select 
-                                    value={continentFilter} 
-                                    onChange={(e) => setContinentFilter(e.target.value)}
-                                    className="w-full bg-zinc-800 border border-white/10 text-slate-200 text-sm rounded-lg p-3 focus:outline-none focus:border-emerald-500/50"
+                  <div className="flex-1 flex flex-col md:flex-row gap-8 overflow-hidden">
+                    {/* Left Column: Game Modes */}
+                    <div className="flex-1 overflow-y-auto pr-2 scrollbar-hide">
+                        <div className="grid grid-cols-1 gap-4">
+                            {gameModes.map(mode => (
+                                <button
+                                    key={mode.id}
+                                    onClick={() => mode.status === 'active' && setSelectedMode(mode.id)}
+                                    className={`relative group p-6 rounded-2xl border text-left transition-all ${
+                                        selectedMode === mode.id 
+                                            ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/10' 
+                                            : 'bg-white/5 border-white/5 hover:bg-white/10'
+                                    } ${mode.status !== 'active' ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
-                                    <option value="All">Global</option>
-                                    <option value="Europe">Europe</option>
-                                    <option value="Asia">Asia</option>
-                                    <option value="Africa">Africa</option>
-                                    <option value="North America">North America</option>
-                                    <option value="South America">South America</option>
-                                    <option value="Oceania">Oceania</option>
-                                </select>
-                            </div>
-                            <div className="text-left">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 block">Duration</label>
-                                <select 
-                                    value={timeLimit} 
-                                    onChange={(e) => setTimeLimit(Number(e.target.value))}
-                                    className="w-full bg-zinc-800 border border-white/10 text-slate-200 text-sm rounded-lg p-3 focus:outline-none focus:border-emerald-500/50"
-                                >
-                                    <option value={300}>5 Min</option>
-                                    <option value={600}>10 Min</option>
-                                    <option value={900}>15 Min</option>
-                                    <option value={1200}>20 Min</option>
-                                    <option value={1800}>30 Min</option>
-                                    <option value={3600}>60 Min</option>
-                                </select>
-                            </div>
+                                    <div className="flex items-start justify-between mb-2">
+                                        <div className={`p-3 rounded-xl ${selectedMode === mode.id ? 'bg-emerald-500 text-white' : 'bg-zinc-800 text-slate-400'}`}>
+                                            <mode.icon className="w-6 h-6" />
+                                        </div>
+                                        {mode.status !== 'active' && (
+                                            <div className="px-2 py-1 bg-zinc-900 rounded-md border border-white/10 flex items-center gap-1">
+                                                <Lock className="w-3 h-3 text-slate-500" />
+                                                <span className="text-[10px] font-bold text-slate-500 uppercase">Coming Soon</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <h3 className={`text-lg font-bold mb-1 ${selectedMode === mode.id ? 'text-white' : 'text-slate-300'}`}>{mode.name}</h3>
+                                    <p className="text-sm text-slate-500 leading-relaxed">{mode.description}</p>
+                                </button>
+                            ))}
                         </div>
-
-                        <div className="mb-2 mt-4">
-                            <button 
-                                onClick={user ? onShowProfile : onShowAuth}
-                                className="w-full py-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 font-medium rounded-xl flex items-center justify-center gap-2 transition-all"
-                            >
-                                <User className="w-4 h-4" />
-                                {user ? 'View Profile' : 'Login / Sign Up'}
-                            </button>
-                        </div>
-
-                        <button 
-                            onClick={onStart}
-                            className="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 transition-all active:scale-95 mt-6"
-                        >
-                            <Play className="w-5 h-5 fill-current" />
-                            {gameStatus === 'ended' ? 'Play Again' : 'Start Game'}
-                        </button>
-
-                        <button 
-                            onClick={onShowStats}
-                            className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-medium rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"
-                        >
-                            <BarChart2 className="w-4 h-4" />
-                            View Learning Bank
-                        </button>
-
-                        <button 
-                            onClick={onShowList}
-                            className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-medium rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"
-                        >
-                            <List className="w-4 h-4" />
-                            View All Countries
-                        </button>
                     </div>
-                  </>
+
+                    {/* Right Column: Settings & Actions */}
+                    <div className="flex-1 flex flex-col bg-white/5 rounded-2xl p-6 border border-white/5">
+                        {gameStatus === 'ended' && (
+                            <div className="mb-6 p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                                <p className="text-emerald-400 text-xs uppercase tracking-widest mb-1 font-bold">Previous Run</p>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-4xl font-mono font-bold text-white">{score}</span>
+                                    <span className="text-sm text-slate-400">/ {totalCountries}</span>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    const text = generateShareText(score, totalCountries, foundCountries, countries, continentFilter);
+                                    navigator.clipboard.writeText(text);
+                                    alert("Result copied to clipboard!");
+                                  }}
+                                  className="mt-3 text-xs flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-bold uppercase tracking-wide transition-colors"
+                                >
+                                  <Share2 className="w-3 h-3" />
+                                  Share Result
+                                </button>
+                            </div>
+                        )}
+
+                        <div className="flex-1">
+                            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                                <Globe className="w-5 h-5 text-emerald-500" />
+                                Game Settings
+                            </h2>
+                            
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Region</label>
+                                    <select 
+                                        value={continentFilter} 
+                                        onChange={(e) => setContinentFilter(e.target.value)}
+                                        className="w-full bg-zinc-900 border border-white/10 text-slate-200 text-sm rounded-xl p-4 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                                    >
+                                        <option value="All">Global - All Countries</option>
+                                        <option value="Europe">Europe</option>
+                                        <option value="Asia">Asia</option>
+                                        <option value="Africa">Africa</option>
+                                        <option value="North America">North America</option>
+                                        <option value="South America">South America</option>
+                                        <option value="Oceania">Oceania</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Duration</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {[300, 600, 900, 1200, 1800, 3600].map(time => (
+                                            <button
+                                                key={time}
+                                                onClick={() => setTimeLimit(time)}
+                                                className={`py-2 rounded-lg text-xs font-bold transition-all border ${
+                                                    timeLimit === time 
+                                                        ? 'bg-emerald-500 text-white border-emerald-500' 
+                                                        : 'bg-zinc-900 text-slate-400 border-white/10 hover:border-white/20 hover:text-slate-300'
+                                                }`}
+                                            >
+                                                {time / 60} Min
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-8 space-y-3">
+                            <button 
+                                onClick={onStart}
+                                className="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 transition-all active:scale-95 group"
+                            >
+                                <Play className="w-5 h-5 fill-current group-hover:scale-110 transition-transform" />
+                                {gameStatus === 'ended' ? 'Play Again' : 'Start Game'}
+                            </button>
+                            
+                            <div className="grid grid-cols-3 gap-2">
+                                <button 
+                                    onClick={onShowStats}
+                                    className="py-3 bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-slate-400 hover:text-white font-medium rounded-xl text-xs transition-all flex flex-col items-center justify-center gap-1"
+                                >
+                                    <BarChart2 className="w-4 h-4" />
+                                    <span>Stats</span>
+                                </button>
+                                <button 
+                                    onClick={onShowList}
+                                    className="py-3 bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-slate-400 hover:text-white font-medium rounded-xl text-xs transition-all flex flex-col items-center justify-center gap-1"
+                                >
+                                    <List className="w-4 h-4" />
+                                    <span>List</span>
+                                </button>
+                                <button 
+                                    onClick={onShowAbout}
+                                    className="py-3 bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-slate-400 hover:text-white font-medium rounded-xl text-xs transition-all flex flex-col items-center justify-center gap-1"
+                                >
+                                    <Info className="w-4 h-4" />
+                                    <span>About</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
                 ) : (
-                  <div className="h-[400px]">
-                    <Leaderboard initialFilter={continentFilter} />
+                  <div className="flex-1 overflow-hidden min-h-[400px]">
+                    <Leaderboard initialFilter={continentFilter} onUserClick={onUserClick} />
                   </div>
                 )}
             </motion.div>

@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Trophy, Clock, Globe, User, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const Leaderboard = ({ onClose, initialFilter = 'All' }) => {
+const Leaderboard = ({ onClose, initialFilter = 'All', onUserClick }) => {
   const [scores, setScores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState(initialFilter); // 'All', 'Europe', etc.
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const { getFlagUrl } = window.gameHelpers || {};
 
   // Update filter if prop changes (handles cases where component doesn't unmount)
   useEffect(() => {
@@ -119,7 +121,8 @@ const Leaderboard = ({ onClose, initialFilter = 'All' }) => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-white/5 border border-white/5 rounded-xl p-4 flex items-center gap-4 hover:bg-white/10 transition-colors"
+                onClick={() => onUserClick && onUserClick({ uid: score.userId, displayName: score.userName, photoURL: score.photoURL })}
+                className="bg-white/5 border border-white/5 rounded-xl p-4 flex items-center gap-4 hover:bg-white/10 transition-colors cursor-pointer group"
               >
                 <div className={`w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm ${
                   index === 0 ? 'bg-yellow-500/20 text-yellow-500' :
@@ -133,11 +136,21 @@ const Leaderboard = ({ onClose, initialFilter = 'All' }) => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     {score.photoURL ? (
-                        <img src={score.photoURL} alt="" className="w-4 h-4 rounded-full" />
+                        <img src={score.photoURL} alt="" className="w-4 h-4 rounded-full object-cover" />
                     ) : (
                         <User className="w-3 h-3 text-slate-500" />
                     )}
-                    <span className="font-medium text-slate-200 truncate text-sm">
+                    
+                    {score.countryCode && getFlagUrl && (
+                        <img 
+                            src={getFlagUrl(score.countryCode)} 
+                            alt="Flag" 
+                            className="w-4 h-3 object-cover rounded-[2px] opacity-80"
+                            title="Player Country"
+                        />
+                    )}
+
+                    <span className="font-medium text-slate-200 truncate text-sm group-hover:text-emerald-400 transition-colors">
                       {score.userName || 'Anonymous'}
                     </span>
                   </div>

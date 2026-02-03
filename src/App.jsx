@@ -17,7 +17,7 @@ function App() {
   const CountryList = window.CountryList;
   const ListModal = window.ListModal;
   const AuthModal = window.AuthModal;
-  const ProfileModal = window.ProfileModal;
+  const AboutModal = window.AboutModal;
   const countries = window.countries || [];
   const normalize = window.normalize;
   const { levenshteinDistance } = window.gameHelpers || {};
@@ -27,6 +27,8 @@ function App() {
   const [firestoreUser, setFirestoreUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
+  const [viewingProfile, setViewingProfile] = useState(null);
 
   // Theme State
   const [darkMode, setDarkMode] = useState(() => {
@@ -187,6 +189,7 @@ function App() {
         userId: displayUser.uid,
         userName: displayUser.displayName || 'Anonymous',
         photoURL: displayUser.photoURL,
+        countryCode: displayUser.countryCode || null,
         score: foundCountries.length,
         total: activeCountries.length,
         region: continentFilter,
@@ -339,6 +342,8 @@ function App() {
           user={displayUser}
           onShowAuth={() => setShowAuth(true)}
           onShowProfile={() => setShowProfile(true)}
+          onShowAbout={() => setShowAbout(true)}
+          onUserClick={(u) => { setViewingProfile(u); setShowProfile(true); }}
         />
       </div>
 
@@ -362,8 +367,16 @@ function App() {
       {showProfile && (
         <ProfileModal 
             isOpen={showProfile}
-            onClose={() => setShowProfile(false)}
-            user={user}
+            onClose={() => { setShowProfile(false); setViewingProfile(null); }}
+            currentUser={user}
+            targetUser={viewingProfile || displayUser}
+        />
+      )}
+
+      {showAbout && (
+        <AboutModal 
+            isOpen={showAbout}
+            onClose={() => setShowAbout(false)}
         />
       )}
 
