@@ -46,8 +46,15 @@
     }
     </script>
 
-    <!-- Babel for JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Babel for JSX (Specific Version & Config) -->
+    <script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js"></script>
+    <script>
+      Babel.registerPreset("react", {
+        presets: [
+          [Babel.availablePresets["react"]]
+        ]
+      });
+    </script>
   </head>
   <body class="bg-zinc-950 text-slate-100 transition-colors duration-300 antialiased h-screen overflow-hidden font-sans tracking-wide">
     <div id="root" class="h-full"></div>

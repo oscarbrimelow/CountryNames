@@ -88,4 +88,4 @@ const CountryList = ({ countries, foundCountries, revealMissed }) => {
 };
 
 window.CountryList = CountryList;
-export default CountryList;
+// export default CountryList;

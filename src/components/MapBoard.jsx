@@ -107,4 +107,4 @@ const MapBoard = ({
 };
 
 window.MapBoard = MapBoard;
-export default MapBoard;
+// export default MapBoard;

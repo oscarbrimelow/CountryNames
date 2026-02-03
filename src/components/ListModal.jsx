@@ -43,4 +43,4 @@ const ListModal = ({ onClose, countries, foundCountries, revealMissed }) => {
 };
 
 window.ListModal = ListModal;
-export default ListModal;
+// export default ListModal;

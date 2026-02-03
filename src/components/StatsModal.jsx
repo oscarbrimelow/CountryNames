@@ -87,4 +87,4 @@ const StatsModal = ({ onClose }) => {
 };
 
 window.StatsModal = StatsModal;
-export default StatsModal;
+// export default StatsModal;

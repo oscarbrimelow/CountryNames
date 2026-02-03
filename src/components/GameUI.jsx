@@ -330,4 +330,4 @@ const GameUI = ({
 };
 
 window.GameUI = GameUI;
-export default GameUI;
+// export default GameUI;

@@ -52,4 +52,4 @@ const StudyModal = ({ country, onClose }) => {
 };
 
 window.StudyModal = StudyModal;
-export default StudyModal;
+// export default StudyModal;
