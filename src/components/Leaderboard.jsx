@@ -158,10 +158,6 @@ const Leaderboard = ({ onClose, initialFilter = 'All', onUserClick }) => {
             ))}
          </div>
        </div>
-         >
-            <Clock className="w-4 h-4" />
-         </button>
-       </div>
 
        {/* List */}
        <div className="flex-1 overflow-y-auto scrollbar-hide space-y-3 pr-2">
