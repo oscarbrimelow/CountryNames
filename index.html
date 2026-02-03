@@ -34,6 +34,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
     
     <script>
@@ -56,6 +57,7 @@
           const app = firebase.initializeApp(firebaseConfig);
           window.db = firebase.firestore();
           window.auth = firebase.auth();
+          window.storage = firebase.storage();
           if (typeof firebase.analytics === 'function') {
             window.analytics = firebase.analytics();
           }
@@ -112,6 +114,7 @@
     <script type="text/babel" data-type="module" src="./src/components/StudyModal.jsx?v=6"></script>
     <script type="text/babel" data-type="module" src="./src/components/StatsModal.jsx?v=6"></script>
     <script type="text/babel" data-type="module" src="./src/components/Leaderboard.jsx?v=6"></script>
+    <script type="text/babel" data-type="module" src="./src/components/ProfileModal.jsx?v=6"></script>
     <script type="text/babel" data-type="module" src="./src/components/GameUI.jsx?v=6"></script>
     
     <!-- App -->

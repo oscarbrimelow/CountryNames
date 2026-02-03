@@ -24,7 +24,8 @@ const GameUI = ({
   activeCountries,
   foundCountries,
   user,
-  onShowAuth
+  onShowAuth,
+  onShowProfile
 }) => {
   const { getFlagUrl, generateShareText } = window.gameHelpers || {};
   const Leaderboard = window.Leaderboard;
@@ -92,7 +93,7 @@ const GameUI = ({
       {/* Auth Button - Always Visible */}
       <div className="absolute top-6 right-6 pointer-events-auto z-50">
         <button 
-          onClick={onShowAuth}
+          onClick={user ? onShowProfile : onShowAuth}
           className={`flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md border shadow-xl transition-all ${
             user 
               ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20' 
@@ -101,10 +102,14 @@ const GameUI = ({
         >
           {user ? (
             <>
-              <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-zinc-950 font-bold text-xs">
-                {user.email ? user.email[0].toUpperCase() : 'U'}
+              <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-zinc-950 font-bold text-xs overflow-hidden">
+                {user.photoURL ? (
+                    <img src={user.photoURL} alt="User" className="w-full h-full object-cover" />
+                ) : (
+                    user.email ? user.email[0].toUpperCase() : 'U'
+                )}
               </div>
-              <span className="text-sm font-medium hidden sm:inline">{user.email?.split('@')[0]}</span>
+              <span className="text-sm font-medium hidden sm:inline">{user.displayName || user.email?.split('@')[0]}</span>
             </>
           ) : (
             <>
@@ -348,7 +353,7 @@ const GameUI = ({
 
                         <div className="mb-2 mt-4">
                             <button 
-                                onClick={onShowAuth}
+                                onClick={user ? onShowProfile : onShowAuth}
                                 className="w-full py-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 font-medium rounded-xl flex items-center justify-center gap-2 transition-all"
                             >
                                 <User className="w-4 h-4" />

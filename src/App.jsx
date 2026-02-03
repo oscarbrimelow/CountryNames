@@ -17,13 +17,16 @@ function App() {
   const CountryList = window.CountryList;
   const ListModal = window.ListModal;
   const AuthModal = window.AuthModal;
+  const ProfileModal = window.ProfileModal;
   const countries = window.countries || [];
   const normalize = window.normalize;
   const { levenshteinDistance } = window.gameHelpers || {};
 
   // Auth State
   const [user, setUser] = useState(null);
+  const [firestoreUser, setFirestoreUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   // Theme State
   const [darkMode, setDarkMode] = useState(() => {
@@ -102,6 +105,31 @@ function App() {
     }
   }, []);
 
+  // Firestore User Listener
+  useEffect(() => {
+    if (user && window.db) {
+        const unsubscribe = window.db.collection('users').doc(user.uid).onSnapshot(doc => {
+            if (doc.exists) {
+                setFirestoreUser(doc.data());
+            }
+        }, err => console.error("Firestore user sync error:", err));
+        return () => unsubscribe();
+    } else {
+        setFirestoreUser(null);
+    }
+  }, [user]);
+
+  const displayUser = useMemo(() => {
+    if (!user) return null;
+    return {
+        uid: user.uid,
+        email: user.email,
+        displayName: firestoreUser?.displayName || user.displayName,
+        photoURL: firestoreUser?.photoURL || user.photoURL,
+        ...firestoreUser
+    };
+  }, [user, firestoreUser]);
+
   // Timer Effect
   useEffect(() => {
     let timer;
@@ -154,11 +182,11 @@ function App() {
     localStorage.setItem('learning_bank', JSON.stringify(bank));
 
     // Save to Firestore Leaderboard
-    if (user && window.db) {
+    if (displayUser && window.db) {
       const scoreData = {
-        userId: user.uid,
-        userName: user.displayName || 'Anonymous',
-        photoURL: user.photoURL,
+        userId: displayUser.uid,
+        userName: displayUser.displayName || 'Anonymous',
+        photoURL: displayUser.photoURL,
         score: foundCountries.length,
         total: activeCountries.length,
         region: continentFilter,
@@ -180,13 +208,13 @@ function App() {
         setTimeout(() => setBonusMessage(null), 3000);
       });
     } else {
-      console.log("Score not saved. User:", !!user, "DB:", !!window.db);
-      if (!user) {
+      console.log("Score not saved. User:", !!displayUser, "DB:", !!window.db);
+      if (!displayUser) {
          setBonusMessage("Log in to save score!");
          setTimeout(() => setBonusMessage(null), 3000);
       }
     }
-  }, [activeCountries, foundCountries, user, continentFilter, timeLimit]);
+  }, [activeCountries, foundCountries, displayUser, continentFilter, timeLimit]);
 
   const handleInput = (input) => {
     const normalizedInput = normalize(input);
@@ -308,8 +336,9 @@ function App() {
           countries={countries}
           activeCountries={activeCountries}
           foundCountries={foundCountries}
-          user={user}
+          user={displayUser}
           onShowAuth={() => setShowAuth(true)}
+          onShowProfile={() => setShowProfile(true)}
         />
       </div>
 
@@ -327,6 +356,14 @@ function App() {
           isOpen={showAuth} 
           onClose={() => setShowAuth(false)} 
           user={user} 
+        />
+      )}
+
+      {showProfile && (
+        <ProfileModal 
+            isOpen={showProfile}
+            onClose={() => setShowProfile(false)}
+            user={user}
         />
       )}
 
