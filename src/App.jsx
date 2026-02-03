@@ -483,6 +483,10 @@ function App() {
           viewingMap={viewingMap}
           setViewingMap={setViewingMap}
           onSkip={gameMode === 'flags' ? skipFlag : null}
+          showPublish={showPublish}
+          pendingScore={pendingScore}
+          confirmPublish={confirmPublish}
+          cancelPublish={cancelPublish}
         />
       </div>
 
