@@ -169,14 +169,16 @@ function App() {
     if (continentFilter === 'Oceania') { setZoom(3); setCenter([140, -30]); }
   };
 
-  const endGame = useCallback(() => {
+  const endGame = useCallback((overrideFoundCountries) => {
     setGameStatus('ended');
     setShowList(true);
     setBonusFlagCountry(null);
     setBonusMessage(null);
     
+    const effectiveFound = Array.isArray(overrideFoundCountries) ? overrideFoundCountries : foundCountries;
+    
     // Save to Learning Bank
-    const currentMissed = activeCountries.filter(c => !foundCountries.includes(c.id));
+    const currentMissed = activeCountries.filter(c => !effectiveFound.includes(c.id));
     const bank = JSON.parse(localStorage.getItem('learning_bank') || '{}');
     currentMissed.forEach(c => {
       bank[c.id] = (bank[c.id] || 0) + 1;
@@ -190,7 +192,7 @@ function App() {
         userName: displayUser.displayName || 'Anonymous',
         photoURL: displayUser.photoURL,
         countryCode: displayUser.countryCode || null,
-        score: foundCountries.length,
+        score: effectiveFound.length,
         total: activeCountries.length,
         region: continentFilter,
         duration: timeLimit,
@@ -258,7 +260,7 @@ function App() {
 
       // Check win condition
       if (foundCountries.length + 1 === activeCountries.length) {
-        endGame();
+        endGame([...foundCountries, match.id]);
       }
       return { status: 'success' };
     }
