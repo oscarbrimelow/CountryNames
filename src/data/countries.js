@@ -371,7 +371,7 @@ const countriesData = [
     alpha3: "RUS",
     name: "Russia",
     aliases: ["russian federation"],
-    continent: ["Europe", "Asia"],
+    continent: "Asia",
     capital: "Moscow",
     fact: "Russia has the world's longest railway, the Trans-Siberian Railway."
   },
