@@ -2,10 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Trophy, Clock, Globe, User, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const Leaderboard = ({ onClose }) => {
+const Leaderboard = ({ onClose, initialFilter = 'All' }) => {
   const [scores, setScores] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('All'); // 'All', 'Europe', etc.
+  const [filter, setFilter] = useState(initialFilter); // 'All', 'Europe', etc.
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Update filter if prop changes (handles cases where component doesn't unmount)
+  useEffect(() => {
+    setFilter(initialFilter);
+  }, [initialFilter]);
 
   useEffect(() => {
     const fetchScores = async () => {
@@ -17,6 +23,7 @@ const Leaderboard = ({ onClose }) => {
 
       setLoading(true);
       try {
+        console.log(`Fetching scores for region: ${filter}`);
         let query = window.db.collection('scores');
 
         if (filter === 'All') {
@@ -24,14 +31,14 @@ const Leaderboard = ({ onClose }) => {
           query = query.orderBy('score', 'desc').limit(50);
         } else {
           // For specific regions, filtering by region AND sorting by score requires a Composite Index.
-          // To avoid forcing the user to create an index, we fetch by region (limit 100) 
+          // To avoid forcing the user to create an index, we fetch by region (limit 500) 
           // and sort on the client side. 
-          // Note: Without an index, we can't efficiently get the "top" 50 from the DB if there are thousands.
-          // We assume volume is low for now.
-          query = query.where('region', '==', filter).limit(100);
+          query = query.where('region', '==', filter).limit(500);
         }
 
         const snapshot = await query.get();
+        console.log(`Fetched ${snapshot.size} scores for ${filter}`);
+        
         let data = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
@@ -54,7 +61,11 @@ const Leaderboard = ({ onClose }) => {
     };
 
     fetchScores();
-  }, [filter]);
+  }, [filter, refreshTrigger]);
+
+  const refresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   const formatDate = (timestamp) => {
     if (!timestamp) return '';
@@ -65,20 +76,29 @@ const Leaderboard = ({ onClose }) => {
   return (
     <div className="h-full flex flex-col">
        {/* Filters */}
-       <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
-          {['All', 'Europe', 'Asia', 'Africa', 'North America', 'South America', 'Oceania'].map(region => (
-            <button
-              key={region}
-              onClick={() => setFilter(region)}
-              className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
-                filter === region 
-                  ? 'bg-emerald-500 text-zinc-900' 
-                  : 'bg-white/5 text-slate-400 hover:bg-white/10'
-              }`}
-            >
-              {region}
-            </button>
-          ))}
+       <div className="flex justify-between items-center mb-4 px-1">
+         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide flex-1">
+            {['All', 'Europe', 'Asia', 'Africa', 'North America', 'South America', 'Oceania'].map(region => (
+              <button
+                key={region}
+                onClick={() => setFilter(region)}
+                className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
+                  filter === region 
+                    ? 'bg-emerald-500 text-zinc-900' 
+                    : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                }`}
+              >
+                {region}
+              </button>
+            ))}
+         </div>
+         <button 
+            onClick={refresh}
+            className="p-2 ml-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            title="Refresh Leaderboard"
+         >
+            <Clock className="w-4 h-4" />
+         </button>
        </div>
 
        {/* List */}

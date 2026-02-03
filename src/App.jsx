@@ -155,7 +155,7 @@ function App() {
 
     // Save to Firestore Leaderboard
     if (user && window.db) {
-      window.db.collection('scores').add({
+      const scoreData = {
         userId: user.uid,
         userName: user.displayName || 'Anonymous',
         photoURL: user.photoURL,
@@ -164,7 +164,27 @@ function App() {
         region: continentFilter,
         duration: timeLimit,
         date: window.firebase.firestore.FieldValue.serverTimestamp()
-      }).catch(err => console.error("Error saving score:", err));
+      };
+
+      console.log("Attempting to save score...", scoreData);
+      
+      window.db.collection('scores').add(scoreData)
+      .then((docRef) => {
+        console.log("Score saved successfully with ID:", docRef.id);
+        setBonusMessage("Score Saved to Leaderboard!");
+        setTimeout(() => setBonusMessage(null), 3000);
+      })
+      .catch(err => {
+        console.error("Error saving score:", err);
+        setBonusMessage("Error saving score!");
+        setTimeout(() => setBonusMessage(null), 3000);
+      });
+    } else {
+      console.log("Score not saved. User:", !!user, "DB:", !!window.db);
+      if (!user) {
+         setBonusMessage("Log in to save score!");
+         setTimeout(() => setBonusMessage(null), 3000);
+      }
     }
   }, [activeCountries, foundCountries, user, continentFilter, timeLimit]);
 

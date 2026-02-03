@@ -383,7 +383,7 @@ const GameUI = ({
                   </>
                 ) : (
                   <div className="h-[400px]">
-                    <Leaderboard />
+                    <Leaderboard initialFilter={continentFilter} />
                   </div>
                 )}
             </motion.div>
