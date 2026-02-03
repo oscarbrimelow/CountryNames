@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
+import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from 'react-simple-maps';
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
@@ -12,7 +12,10 @@ const MapBoard = ({
   center, 
   setCenter,
   filterContinent,
-  mapMode = 'game' // 'game' or 'explore'
+  mapMode = 'game', // 'game' or 'explore'
+  highlightCountry, // ID of country to highlight (Flag Quiz)
+  flagLocation, // [lon, lat] for the flag marker
+  flagUrl // URL for the flag image
 }) => {
   
   // Color Palettes
@@ -24,7 +27,8 @@ const MapBoard = ({
       missed: "#ef4444",  // Red-500
       stroke: "#3f3f46",  // Zinc-700
       foundStroke: "#34d399", // Emerald-400
-      hover: "#3f3f46"    // Zinc-700 (subtle)
+      hover: "#3f3f46",    // Zinc-700 (subtle)
+      highlight: "#f59e0b" // Amber-500 (Flag Quiz Target)
     },
     explore: {
       bg: "bg-sky-950",   // Deep Ocean
@@ -68,6 +72,7 @@ const MapBoard = ({
 
                 const isFound = foundCountries.includes(effectiveId) || foundCountries.includes(geo.properties.ISO_A3);
                 const isMissed = missedCountries && missedCountries.includes(effectiveId);
+                const isHighlight = highlightCountry === effectiveId || highlightCountry === geo.properties.ISO_A3;
 
                 // Use the effective ID for the click handler too, or handle it in the handler
                 const handleGeoClick = () => {
@@ -86,25 +91,26 @@ const MapBoard = ({
                     style={{
                       default: {
                         fill: mapMode === 'game' 
-                              ? (isFound ? theme.found : (isMissed ? theme.missed : theme.default))
+                              ? (isHighlight ? theme.highlight : (isFound ? theme.found : (isMissed ? theme.missed : theme.default)))
                               : theme.default,
                         outline: "none",
                         stroke: mapMode === 'game' 
                                 ? (isFound ? theme.foundStroke : theme.stroke)
                                 : theme.stroke,
-                        strokeWidth: 0.5,
+                        strokeWidth: isHighlight ? 2 : 0.5,
+                        stroke: isHighlight ? "#fff" : (mapMode === 'game' ? (isFound ? theme.foundStroke : theme.stroke) : theme.stroke),
                         transition: "all 0.3s ease",
-                        filter: mapMode === 'game' && isFound ? "drop-shadow(0 0 6px rgba(16, 185, 129, 0.5))" : "none"
+                        filter: mapMode === 'game' && (isFound || isHighlight) ? `drop-shadow(0 0 ${isHighlight ? '10px' : '6px'} ${isHighlight ? 'rgba(245, 158, 11, 0.6)' : 'rgba(16, 185, 129, 0.5)'})` : "none"
                       },
                       hover: {
                         fill: mapMode === 'game'
-                              ? (isFound ? "#059669" : (isMissed ? "#dc2626" : "#3f3f46"))
+                              ? (isHighlight ? theme.highlight : (isFound ? "#059669" : (isMissed ? "#dc2626" : "#3f3f46")))
                               : theme.hover,
                         outline: "none",
                         stroke: mapMode === 'game' ? "#71717a" : "#ffffff",
                         strokeWidth: 1,
                         cursor: "pointer",
-                        filter: mapMode === 'game' && isFound ? "drop-shadow(0 0 8px rgba(16, 185, 129, 0.7))" : "drop-shadow(0 0 8px rgba(0,0,0,0.2))"
+                        filter: mapMode === 'game' && (isFound || isHighlight) ? `drop-shadow(0 0 ${isHighlight ? '12px' : '8px'} ${isHighlight ? 'rgba(245, 158, 11, 0.8)' : 'rgba(16, 185, 129, 0.7)'})` : "drop-shadow(0 0 8px rgba(0,0,0,0.2))"
                       },
                       pressed: {
                         fill: mapMode === 'game' ? "#047857" : theme.pressed,
@@ -116,6 +122,26 @@ const MapBoard = ({
               })
             }
           </Geographies>
+          {highlightCountry && flagLocation && flagUrl && (
+            <Marker coordinates={flagLocation}>
+               <foreignObject x="-30" y="-50" width="60" height="40">
+                 <div className="w-full h-full rounded-md overflow-hidden border-2 border-white shadow-xl bg-zinc-900 animate-bounce">
+                    <img src={flagUrl} alt="Flag" className="w-full h-full object-cover" />
+                 </div>
+               </foreignObject>
+               <g
+                fill="none"
+                stroke="#f59e0b"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                transform="translate(-12, -10)"
+               >
+                 <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z" fill="#f59e0b" fillOpacity="0.5" />
+                 <circle cx="12" cy="10" r="3" fill="#fff" />
+               </g>
+            </Marker>
+          )}
         </ZoomableGroup>
       </ComposableMap>
       

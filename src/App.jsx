@@ -9,6 +9,8 @@ import { Map as MapIcon, Moon, Sun } from 'lucide-react';
 // const countries = window.countries;
 // const normalize = window.normalize;
 
+import { geoData } from './data/geoData';
+
 function App() {
   const MapBoard = window.MapBoard;
   const GameUI = window.GameUI;
@@ -21,6 +23,11 @@ function App() {
   const countries = window.countries || [];
   const normalize = window.normalize;
   const { levenshteinDistance } = window.gameHelpers || {};
+
+  // Attach geoData to window for other components if needed
+  if (typeof window !== 'undefined' && !window.geoData) {
+      window.geoData = geoData;
+  }
 
   // Auth State
   const [user, setUser] = useState(null);
@@ -41,12 +48,20 @@ function App() {
 
   // Game State
   const [gameStatus, setGameStatus] = useState('idle'); // 'idle', 'playing', 'ended'
+  const [gameMode, setGameMode] = useState('classic'); // 'classic', 'flags'
   const [foundCountries, setFoundCountries] = useState([]);
   const [timeLimit, setTimeLimit] = useState(900); // Default 15 minutes
   const [timeLeft, setTimeLeft] = useState(900);
   const [continentFilter, setContinentFilter] = useState("All");
   const [viewingMap, setViewingMap] = useState(false);
   
+  // Flag Quiz State
+  const [flagQuizTarget, setFlagQuizTarget] = useState(null);
+  const [flagQuizQueue, setFlagQuizQueue] = useState([]);
+  const [flagQuizSettings, setFlagQuizSettings] = useState(null);
+  const [quizTotal, setQuizTotal] = useState(0);
+  const [quizCountries, setQuizCountries] = useState([]); // Store the actual pool of countries for the quiz
+
   // Map State
   const [zoom, setZoom] = useState(1);
   const [center, setCenter] = useState([0, 20]);
@@ -87,10 +102,13 @@ function App() {
 
   const missedCountries = useMemo(() => {
     if (gameStatus !== 'ended') return [];
-    return activeCountries
+    
+    const targetList = gameMode === 'flags' ? quizCountries : activeCountries;
+    
+    return targetList
       .filter(c => !foundCountries.includes(c.id))
       .map(c => c.id);
-  }, [gameStatus, activeCountries, foundCountries]);
+  }, [gameStatus, activeCountries, foundCountries, gameMode, quizCountries]);
 
   // Theme Effect
   useEffect(() => {
@@ -156,7 +174,61 @@ function App() {
   }, [gameStatus, timeLeft]);
 
   // Game Logic
-  const startGame = () => {
+  const startFlagQuiz = (settings) => {
+      setFlagQuizSettings(settings);
+      // geoData is now imported or available via window.geoData (which we set)
+      const data = window.geoData || geoData;
+      
+      let pool = countries;
+      if (settings.filter === '25' || settings.filter === '50') {
+          const limit = parseInt(settings.filter);
+          pool = countries
+              .filter(c => data[c.alpha3]) 
+              .sort((a, b) => (data[b.alpha3]?.pop || 0) - (data[a.alpha3]?.pop || 0))
+              .slice(0, limit);
+      } else if (settings.filter === 'continent') {
+            // Continent filter is already handled by activeCountries logic in App, but here we want strict pool
+            // Actually activeCountries depends on continentFilter state.
+            // If settings.filter is continent, we expect continentFilter state to be set.
+            if (continentFilter !== "All") {
+                pool = countries.filter(c => c.continent === continentFilter);
+            }
+      }
+      
+      // Shuffle
+      const queue = pool.map(c => c.id).sort(() => Math.random() - 0.5);
+      setFlagQuizQueue(queue);
+      setQuizTotal(queue.length);
+      setQuizCountries(pool);
+      
+      // Pick first
+      nextFlagTarget(queue);
+  };
+
+  const nextFlagTarget = (queue) => {
+      if (!queue || queue.length === 0) {
+          endGame();
+          return;
+      }
+      const nextId = queue[0];
+      const target = countries.find(c => c.id === nextId);
+      const data = window.geoData || geoData;
+      const geo = data?.[target.alpha3];
+      
+      setFlagQuizTarget({ ...target, coords: geo?.coords });
+      
+      // Zoom logic
+      if (geo?.coords) {
+          setZoom(4); 
+          setCenter(geo.coords);
+      }
+  };
+
+  const startGame = (options = {}) => {
+    const mode = options.mode || 'classic';
+    const settings = options.settings || {};
+    
+    setGameMode(mode);
     setFoundCountries([]);
     setTimeLeft(timeLimit);
     setGameStatus('playing');
@@ -168,14 +240,29 @@ function App() {
     setPendingScore(null);
     setZoom(1);
     setCenter([0, 20]);
+    setQuizTotal(0); // Reset quiz total
+    setQuizCountries([]);
     
-    // Focus map based on continent? (Optional polish)
-    if (continentFilter === 'Europe') { setZoom(3); setCenter([10, 50]); }
-    if (continentFilter === 'Asia') { setZoom(2); setCenter([90, 40]); }
-    if (continentFilter === 'Africa') { setZoom(2); setCenter([20, 0]); }
-    if (continentFilter === 'North America') { setZoom(2); setCenter([-100, 40]); }
-    if (continentFilter === 'South America') { setZoom(2); setCenter([-60, -20]); }
-    if (continentFilter === 'Oceania') { setZoom(3); setCenter([140, -30]); }
+    if (mode === 'flags') {
+        startFlagQuiz(settings);
+    } else {
+        // Focus map based on continent? (Optional polish)
+        if (continentFilter === 'Europe') { setZoom(3); setCenter([10, 50]); }
+        if (continentFilter === 'Asia') { setZoom(2); setCenter([90, 40]); }
+        if (continentFilter === 'Africa') { setZoom(2); setCenter([20, 0]); }
+        if (continentFilter === 'North America') { setZoom(2); setCenter([-100, 40]); }
+        if (continentFilter === 'South America') { setZoom(2); setCenter([-60, -20]); }
+        if (continentFilter === 'Oceania') { setZoom(3); setCenter([140, -30]); }
+    }
+  };
+
+  const skipFlag = () => {
+    if (gameMode !== 'flags') return;
+    
+    // Move to next without adding to found
+    const newQueue = flagQuizQueue.slice(1);
+    setFlagQuizQueue(newQueue);
+    nextFlagTarget(newQueue);
   };
 
   const endGame = useCallback((overrideFoundCountries) => {
@@ -185,9 +272,10 @@ function App() {
     setBonusMessage(null);
     
     const effectiveFound = Array.isArray(overrideFoundCountries) ? overrideFoundCountries : foundCountries;
+    const targetList = gameMode === 'flags' ? quizCountries : activeCountries;
     
     // Save to Learning Bank
-    const currentMissed = activeCountries.filter(c => !effectiveFound.includes(c.id));
+    const currentMissed = targetList.filter(c => !effectiveFound.includes(c.id));
     const bank = JSON.parse(localStorage.getItem('learning_bank') || '{}');
     currentMissed.forEach(c => {
       bank[c.id] = (bank[c.id] || 0) + 1;
@@ -201,7 +289,7 @@ function App() {
     const flagPoints = flagBonusCount * 50;
     // Time Bonus: 2 pts per second remaining (ONLY if all found)
     let timePoints = 0;
-    if (effectiveFound.length === activeCountries.length) {
+    if (effectiveFound.length === targetList.length) {
         timePoints = timeLeft * 2;
     }
     const totalPoints = basePoints + flagPoints + timePoints;
@@ -214,11 +302,12 @@ function App() {
         photoURL: displayUser.photoURL,
         countryCode: displayUser.countryCode || null,
         score: effectiveFound.length,
-        total: activeCountries.length,
+        total: targetList.length,
         region: continentFilter,
         duration: timeLimit,
         points: totalPoints,
-        date: window.firebase.firestore.FieldValue.serverTimestamp()
+        date: window.firebase.firestore.FieldValue.serverTimestamp(),
+        mode: gameMode // Add mode to score data
       };
 
       setPendingScore(scoreData);
@@ -267,6 +356,24 @@ function App() {
 
     if (match) {
       // Correct Answer Logic
+      if (gameMode === 'flags') {
+          if (match.id === flagQuizTarget.id) {
+              setFoundCountries(prev => [...prev, match.id]);
+              setBonusMessage("Correct!");
+              setTimeout(() => setBonusMessage(null), 1500);
+              
+              const newQueue = flagQuizQueue.slice(1);
+              setFlagQuizQueue(newQueue);
+              nextFlagTarget(newQueue);
+              return { status: 'success' };
+          } else {
+               // Wrong guess for flag quiz
+               // Maybe shake?
+               return { status: 'close' }; // Using 'close' to trigger shake
+          }
+      }
+
+      // Classic Mode Logic
       setFoundCountries(prev => [...prev, match.id]);
       
       // Bonus Check
@@ -338,30 +445,15 @@ function App() {
   return (
     <div className="h-screen w-screen bg-zinc-950 text-slate-100 overflow-hidden relative font-sans selection:bg-emerald-500/30">
       
-      {/* Map Background */}
-      <div className="absolute inset-0 z-0">
-          <MapBoard 
-            foundCountries={foundCountries}
-            missedCountries={missedCountries}
-            onCountryClick={handleCountryClick}
-            zoom={zoom}
-            setZoom={setZoom}
-            center={center}
-            setCenter={setCenter}
-            filterContinent={continentFilter}
-            mapMode={viewingMap ? 'explore' : 'game'}
-          />
-      </div>
-
       {/* Game UI Overlay */}
       <div className="absolute inset-0 z-10 pointer-events-none">
         <GameUI 
           gameStatus={gameStatus}
           score={foundCountries.length}
-          totalCountries={activeCountries.length}
+          totalCountries={gameMode === 'flags' ? quizTotal : activeCountries.length}
           timeLeft={timeLeft}
           onInputChange={handleInput}
-          onGiveUp={endGame}
+          onGiveUp={() => endGame()}
           onStart={startGame}
           foundCount={foundCountries.length}
           recentFound={recentFound}
@@ -380,10 +472,34 @@ function App() {
           onShowAuth={() => setShowAuth(true)}
           onShowProfile={() => setShowProfile(true)}
           onShowAbout={() => setShowAbout(true)}
-          onUserClick={(u) => { setViewingProfile(u); setShowProfile(true); }}
+          onUserClick={(u) => {
+              setViewingProfile(u);
+              setShowProfile(true);
+          }}
           viewingMap={viewingMap}
           setViewingMap={setViewingMap}
+          onSkip={gameMode === 'flags' ? skipFlag : null}
         />
+      </div>
+
+      {/* Map Layer - Always Rendered but controlled */}
+      <div className={`absolute inset-0 transition-all duration-700 ${viewingMap ? 'z-40' : 'z-0'}`}>
+          <MapBoard 
+            foundCountries={foundCountries} 
+            missedCountries={missedCountries}
+            onCountryClick={(country) => {
+               setSelectedCountry(country);
+            }}
+            zoom={zoom}
+            setZoom={setZoom}
+            center={center}
+            setCenter={setCenter}
+            filterContinent={continentFilter}
+            mapMode={viewingMap && gameStatus !== 'playing' ? 'explore' : 'game'}
+            highlightCountry={gameMode === 'flags' && flagQuizTarget ? flagQuizTarget.id : null}
+            flagLocation={gameMode === 'flags' && flagQuizTarget ? flagQuizTarget.coords : null}
+            flagUrl={gameMode === 'flags' && flagQuizTarget ? window.gameHelpers?.getFlagUrl(flagQuizTarget.alpha3) : null}
+          />
       </div>
 
       <StudyModal 
@@ -424,7 +540,7 @@ function App() {
         {showList && (
           <ListModal 
             onClose={() => setShowList(false)}
-            countries={activeCountries}
+            countries={gameMode === 'flags' ? quizCountries : activeCountries}
             foundCountries={foundCountries}
             revealMissed={gameStatus === 'ended'}
           />

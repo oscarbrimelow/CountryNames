@@ -29,7 +29,8 @@ const GameUI = ({
   onShowAbout,   // Replaced by tab
   onUserClick,    // Passed to Leaderboard
   viewingMap,
-  setViewingMap
+  setViewingMap,
+  onSkip // New prop for skipping current flag
 }) => {
   const { getFlagUrl, generateShareText } = window.gameHelpers || {};
   const Leaderboard = window.Leaderboard;
@@ -44,6 +45,9 @@ const GameUI = ({
   const [playView, setPlayView] = useState('menu'); // 'menu', 'quizzes', 'learn'
 
   const [selectedMode, setSelectedMode] = useState('classic');
+  const [flagSettings, setFlagSettings] = useState({
+      filter: '25', // '25', '50', 'continent'
+  });
   // const [viewingMap, setViewingMap] = useState(false); // Lifted to App.jsx
   const inputRef = useRef(null);
 
@@ -87,7 +91,7 @@ const GameUI = ({
 
   const gameModes = [
     { id: 'classic', name: 'Name Countries', icon: Globe, description: 'Identify countries on the map', status: 'active' },
-    { id: 'flags', name: 'Flag Quiz', icon: Flag, description: 'Match flags to countries', status: 'coming_soon' },
+    { id: 'flags', name: 'Flag Quiz', icon: Flag, description: 'Match flags to countries', status: 'active' },
     { id: 'capitals', name: 'Capital Cities', icon: Navigation, description: 'Name the capital cities', status: 'coming_soon' },
     { id: 'states', name: 'State Challenge', icon: Map, description: 'Identify states and provinces', status: 'coming_soon' },
   ];
@@ -274,6 +278,17 @@ const GameUI = ({
             className="absolute bottom-12 left-1/2 -translate-x-1/2 w-full max-w-lg px-4 pointer-events-auto z-50"
         >
             <form onSubmit={handleSubmit} className="relative group">
+                {/* Skip Button - Left side */}
+                {onSkip && (
+                    <button 
+                        type="button"
+                        onClick={onSkip}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-slate-500 hover:text-amber-400 transition-colors z-20"
+                        title="Skip"
+                    >
+                        <SkipForward className="w-5 h-5" />
+                    </button>
+                )}
                 <input
                     ref={inputRef}
                     type="text"
@@ -288,7 +303,7 @@ const GameUI = ({
                     className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-500 hover:text-red-400 transition-colors"
                     title="Give Up"
                 >
-                    <SkipForward className="w-5 h-5" />
+                    <X className="w-5 h-5" />
                 </button>
             </form>
         </motion.div>
@@ -462,22 +477,81 @@ const GameUI = ({
                                         </h2>
                                         
                                         <div className="space-y-4">
-                                            <div>
-                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Region</label>
-                                                <select 
-                                                    value={continentFilter} 
-                                                    onChange={(e) => setContinentFilter(e.target.value)}
-                                                    className="w-full bg-zinc-900 border border-white/10 text-slate-200 text-sm rounded-xl p-3 focus:outline-none focus:border-emerald-500/50 transition-colors"
-                                                >
-                                                    <option value="All">Global - All Countries</option>
-                                                    <option value="Europe">Europe</option>
-                                                    <option value="Asia">Asia</option>
-                                                    <option value="Africa">Africa</option>
-                                                    <option value="North America">North America</option>
-                                                    <option value="South America">South America</option>
-                                                    <option value="Oceania">Oceania</option>
-                                                </select>
-                                            </div>
+                                            {selectedMode === 'flags' ? (
+                                                <>
+                                                    <div>
+                                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Difficulty</label>
+                                                        <div className="grid grid-cols-1 gap-2">
+                                                            <button
+                                                                onClick={() => setFlagSettings(s => ({ ...s, filter: '25' }))}
+                                                                className={`py-3 px-4 rounded-xl text-sm font-bold text-left transition-all border ${
+                                                                    flagSettings.filter === '25' 
+                                                                        ? 'bg-amber-500/20 border-amber-500 text-amber-400' 
+                                                                        : 'bg-zinc-900 border-white/10 text-slate-400 hover:border-white/20'
+                                                                }`}
+                                                            >
+                                                                Top 25 Most Popular
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setFlagSettings(s => ({ ...s, filter: '50' }))}
+                                                                className={`py-3 px-4 rounded-xl text-sm font-bold text-left transition-all border ${
+                                                                    flagSettings.filter === '50' 
+                                                                        ? 'bg-amber-500/20 border-amber-500 text-amber-400' 
+                                                                        : 'bg-zinc-900 border-white/10 text-slate-400 hover:border-white/20'
+                                                                }`}
+                                                            >
+                                                                Top 50 Most Popular
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setFlagSettings(s => ({ ...s, filter: 'continent' }))}
+                                                                className={`py-3 px-4 rounded-xl text-sm font-bold text-left transition-all border ${
+                                                                    flagSettings.filter === 'continent' 
+                                                                        ? 'bg-amber-500/20 border-amber-500 text-amber-400' 
+                                                                        : 'bg-zinc-900 border-white/10 text-slate-400 hover:border-white/20'
+                                                                }`}
+                                                            >
+                                                                By Continent
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    {flagSettings.filter === 'continent' && (
+                                                        <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Select Continent</label>
+                                                            <select 
+                                                                value={continentFilter} 
+                                                                onChange={(e) => setContinentFilter(e.target.value)}
+                                                                className="w-full bg-zinc-900 border border-white/10 text-slate-200 text-sm rounded-xl p-3 focus:outline-none focus:border-amber-500/50 transition-colors"
+                                                            >
+                                                                <option value="All">All Continents</option>
+                                                                <option value="Europe">Europe</option>
+                                                                <option value="Asia">Asia</option>
+                                                                <option value="Africa">Africa</option>
+                                                                <option value="North America">North America</option>
+                                                                <option value="South America">South America</option>
+                                                                <option value="Oceania">Oceania</option>
+                                                            </select>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <div>
+                                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Region</label>
+                                                    <select 
+                                                        value={continentFilter} 
+                                                        onChange={(e) => setContinentFilter(e.target.value)}
+                                                        className="w-full bg-zinc-900 border border-white/10 text-slate-200 text-sm rounded-xl p-3 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                                                    >
+                                                        <option value="All">Global - All Countries</option>
+                                                        <option value="Europe">Europe</option>
+                                                        <option value="Asia">Asia</option>
+                                                        <option value="Africa">Africa</option>
+                                                        <option value="North America">North America</option>
+                                                        <option value="South America">South America</option>
+                                                        <option value="Oceania">Oceania</option>
+                                                    </select>
+                                                </div>
+                                            )}
                                             
                                             <div>
                                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Duration</label>
@@ -525,7 +599,7 @@ const GameUI = ({
                                     </div>
 
                                     <button 
-                                        onClick={onStart}
+                                        onClick={() => onStart({ mode: selectedMode, settings: flagSettings })}
                                         className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-zinc-900 font-black text-lg uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98] mt-6"
                                     >
                                         {gameStatus === 'ended' ? 'Play Again' : 'Start Game'}
