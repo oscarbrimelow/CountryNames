@@ -402,7 +402,8 @@ const GameUI = ({
 
                         {/* Quizzes Sub-View */}
                         {playView === 'quizzes' && (
-                            <div className="flex flex-col h-full overflow-y-auto custom-scrollbar">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full p-2">
+                                <div className="flex flex-col h-full overflow-y-auto custom-scrollbar">
                                 <div className="flex items-center gap-4 mb-6 shrink-0">
                                     <button 
                                         onClick={() => setPlayView('menu')}
