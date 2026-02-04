@@ -358,6 +358,9 @@ function App() {
   const handleInput = (input) => {
     const normalizedInput = normalize(input);
     
+    // Debug
+    console.log(`Checking input: ${input} (${normalizedInput}) vs Target: ${flagQuizTarget?.name}`);
+
     // Determine search pool: use all countries for Flag Quiz to avoid filter issues, 
     // otherwise use filtered activeCountries for Classic Mode
     const searchPool = gameMode === 'flags' ? countries : activeCountries;

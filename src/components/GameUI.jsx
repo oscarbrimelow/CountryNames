@@ -30,7 +30,11 @@ const GameUI = ({
   onUserClick,    // Passed to Leaderboard
   viewingMap,
   setViewingMap,
-  onSkip // New prop for skipping current flag
+  onSkip, // New prop for skipping current flag
+  showPublish,
+  pendingScore,
+  confirmPublish,
+  cancelPublish
 }) => {
   const { getFlagUrl, generateShareText } = window.gameHelpers || {};
   const Leaderboard = window.Leaderboard;
