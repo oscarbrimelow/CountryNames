@@ -296,8 +296,8 @@ function App() {
       countryCode: displayUser ? (displayUser.countryCode || null) : null,
       score: effectiveFound.length,
       total: targetList.length,
-      region: (gameMode === 'flags' && (flagSettings?.filter === '25' || flagSettings?.filter === '50')) ? 'All' : continentFilter,
-      difficulty: flagSettings?.filter || 'All',
+      region: (gameMode === 'flags' && (flagQuizSettings?.filter === '25' || flagQuizSettings?.filter === '50')) ? 'All' : continentFilter,
+      difficulty: flagQuizSettings?.filter || 'All',
       duration: timeLimit,
       points: totalPoints,
       date: window.firebase.firestore.FieldValue.serverTimestamp(),
@@ -311,7 +311,7 @@ function App() {
         setBonusMessage(`Game Over! ${totalPoints} pts.`);
         setTimeout(() => setBonusMessage(null), 5000);
     }
-  }, [activeCountries, foundCountries, displayUser, continentFilter, timeLimit, flagBonusCount, timeLeft, gameMode, quizCountries, flagSettings]);
+  }, [activeCountries, foundCountries, displayUser, continentFilter, timeLimit, flagBonusCount, timeLeft, gameMode, quizCountries, flagQuizSettings]);
 
   const confirmPublish = () => {
     if (!pendingScore) return;
