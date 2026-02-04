@@ -189,6 +189,16 @@ function App() {
             }
       }
       
+      // CRITICAL FIX: Ensure all countries in pool have geoData coordinates
+      // This prevents "missing flag" bug where a country without coords stops the game
+      pool = pool.filter(c => data[c.alpha3]?.coords);
+
+      if (pool.length === 0) {
+          alert("No valid countries found for this selection.");
+          endGame();
+          return;
+      }
+      
       // Shuffle
       const queue = pool.map(c => c.id).sort(() => Math.random() - 0.5);
       setFlagQuizQueue(queue);
@@ -208,6 +218,14 @@ function App() {
       const target = countries.find(c => c.id === nextId);
       const data = window.geoData || geoData;
       const geo = data?.[target.alpha3];
+      
+      // Safety net: If somehow a country without coords got in
+      if (!geo?.coords) {
+          console.warn(`Skipping ${target.name} due to missing coordinates`);
+          // Skip to next immediately
+          nextFlagTarget(queue.slice(1));
+          return;
+      }
       
       setFlagQuizTarget({ ...target, coords: geo?.coords });
       

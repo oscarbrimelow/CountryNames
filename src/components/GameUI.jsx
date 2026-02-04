@@ -65,6 +65,14 @@ const GameUI = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (input.trim().length > 0) {
+        setShake(true);
+        setInputStyle("error");
+        setTimeout(() => {
+            setShake(false);
+            setInputStyle("normal");
+        }, 500);
+    }
   };
 
   const handleChange = (e) => {
@@ -80,7 +88,10 @@ const GameUI = ({
     } else if (result.status === 'close') {
       setShake(true);
       setInputStyle("close");
-      setTimeout(() => setShake(false), 500);
+      setTimeout(() => {
+          setShake(false);
+          setInputStyle("normal"); // Reset style after shake
+      }, 500);
     }
   };
 
@@ -281,7 +292,12 @@ const GameUI = ({
             animate={{ y: 0, opacity: 1 }}
             className="absolute bottom-12 left-1/2 -translate-x-1/2 w-full max-w-lg px-4 pointer-events-auto z-50"
         >
-            <form onSubmit={handleSubmit} className="relative group">
+            <motion.form 
+                onSubmit={handleSubmit} 
+                className="relative group"
+                animate={shake ? { x: [-10, 10, -10, 10, 0] } : {}}
+                transition={{ duration: 0.4 }}
+            >
                 {/* Skip Button - Left side */}
                 {onSkip && (
                     <button 
@@ -299,7 +315,11 @@ const GameUI = ({
                     value={input}
                     onChange={handleChange}
                     placeholder="Type a country name..."
-                    className="w-full bg-zinc-900/60 backdrop-blur-xl text-slate-100 placeholder:text-slate-500 text-center text-xl font-light tracking-wide py-4 px-6 rounded-2xl border border-white/10 shadow-2xl focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all duration-300"
+                    className={`w-full bg-zinc-900/60 backdrop-blur-xl text-slate-100 placeholder:text-slate-500 text-center text-xl font-light tracking-wide py-4 px-6 rounded-2xl border shadow-2xl focus:outline-none transition-all duration-300 ${
+                        inputStyle === 'error' || inputStyle === 'close'
+                            ? 'border-red-500 shadow-red-500/20'
+                            : 'border-white/10 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50'
+                    }`}
                 />
                 <button 
                     type="button"
@@ -309,7 +329,7 @@ const GameUI = ({
                 >
                     <X className="w-5 h-5" />
                 </button>
-            </form>
+            </motion.form>
         </motion.div>
       )}
 
