@@ -35,7 +35,11 @@ const GameUI = ({
   pendingScore,
   confirmPublish,
   cancelPublish,
-  capitalsTarget // Target for capitals mode
+  capitalsTarget, // Target for capitals mode
+  userStats,
+  achievements,
+  unlockedAchievements,
+  newAchievement
 }) => {
   const { getFlagUrl, generateShareText } = window.gameHelpers || {};
   const Leaderboard = window.Leaderboard;
@@ -258,6 +262,28 @@ const GameUI = ({
              <div className="bg-amber-500 text-white px-6 py-2 rounded-full font-bold shadow-lg flex items-center gap-2">
                <Flag className="w-5 h-5" />
                {bonusMessage}
+             </div>
+           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Achievement Notification */}
+      <AnimatePresence>
+        {newAchievement && (
+           <motion.div
+             initial={{ opacity: 0, y: -50 }}
+             animate={{ opacity: 1, y: 0 }}
+             exit={{ opacity: 0, y: -50 }}
+             className="absolute top-4 md:top-8 left-1/2 -translate-x-1/2 z-[60] pointer-events-none"
+           >
+             <div className="bg-zinc-900 border border-yellow-500/50 px-6 py-3 rounded-xl shadow-2xl flex items-center gap-4">
+                <div className="p-2 bg-yellow-500/10 rounded-full">
+                  <Trophy className="w-6 h-6 text-yellow-400" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold text-yellow-500 uppercase tracking-widest">Achievement Unlocked!</div>
+                  <div className="text-white font-bold text-sm">{newAchievement.title}</div>
+                </div>
              </div>
            </motion.div>
         )}
@@ -785,7 +811,13 @@ const GameUI = ({
                             {user ? (
                                 <div className="max-w-xl mx-auto">
                                     {UserProfile ? (
-                                        <UserProfile user={user} isEditable={true} />
+                                        <UserProfile 
+                                            user={user} 
+                                            isEditable={true} 
+                                            stats={userStats}
+                                            achievements={achievements}
+                                            unlocked={unlockedAchievements}
+                                        />
                                     ) : (
                                         <p>Loading Profile Component...</p>
                                     )}

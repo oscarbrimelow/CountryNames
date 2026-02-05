@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Save, User, Camera, Settings, Trophy, Globe, Calendar } from 'lucide-react';
 
-const UserProfile = ({ user, isEditable, onSave }) => {
+const UserProfile = ({ user, isEditable, onSave, stats: initialStats, achievements, unlocked: initialUnlocked }) => {
   const [displayName, setDisplayName] = useState('');
   const [photoURL, setPhotoURL] = useState('');
   const [bio, setBio] = useState('');
   const [countryCode, setCountryCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
+  
+  const [stats, setStats] = useState(initialStats || {});
+  const [unlocked, setUnlocked] = useState(initialUnlocked || []);
 
   const countries = window.countries || [];
   const { getFlagUrl } = window.gameHelpers || {};
@@ -26,11 +29,22 @@ const UserProfile = ({ user, isEditable, onSave }) => {
                     setBio(data.bio || '');
                     setCountryCode(data.countryCode || '');
                     if (data.photoURL) setPhotoURL(data.photoURL);
+                    if (data.stats) setStats(data.stats);
+                    if (data.achievements) setUnlocked(data.achievements);
                 }
             }).catch(err => console.error("Error fetching profile:", err));
         }
     }
   }, [user]);
+
+  // Update local state if props change (for current user)
+  useEffect(() => {
+      if (initialStats) setStats(initialStats);
+  }, [initialStats]);
+
+  useEffect(() => {
+      if (initialUnlocked) setUnlocked(initialUnlocked);
+  }, [initialUnlocked]);
 
   const handleFileChange = async (e) => {
     if (!isEditable) return;
@@ -202,6 +216,39 @@ const UserProfile = ({ user, isEditable, onSave }) => {
                             {bio || 'No bio yet.'}
                         </div>
                     )}
+                </div>
+
+                {/* Achievements */}
+                <div>
+                    <h3 className="text-emerald-400 font-bold mb-3 flex items-center gap-2 mt-2">
+                        <Trophy className="w-4 h-4" />
+                        Achievements
+                    </h3>
+                    <div className="grid grid-cols-3 gap-2">
+                        {achievements && achievements.map(ach => {
+                            const isUnlocked = unlocked.includes(ach.id);
+                            const Icon = ach.icon || Trophy;
+                            return (
+                                <div 
+                                    key={ach.id} 
+                                    className={`p-2 rounded-xl border flex flex-col items-center text-center gap-1 transition-all ${
+                                        isUnlocked 
+                                            ? 'bg-zinc-900 border-emerald-500/30 shadow-lg shadow-emerald-500/10' 
+                                            : 'bg-zinc-900/50 border-white/5 opacity-50 grayscale'
+                                    }`}
+                                    title={ach.description}
+                                >
+                                    <div className={`p-2 rounded-full ${isUnlocked ? 'bg-emerald-500/10' : 'bg-white/5'}`}>
+                                        <Icon className={`w-5 h-5 ${isUnlocked ? ach.color : 'text-slate-500'}`} />
+                                    </div>
+                                    <div className="text-[10px] font-bold text-slate-300 leading-tight">{ach.title}</div>
+                                </div>
+                            );
+                        })}
+                        {(!achievements || achievements.length === 0) && (
+                            <p className="text-slate-500 text-xs col-span-3 text-center">No achievements data.</p>
+                        )}
+                    </div>
                 </div>
             </div>
 

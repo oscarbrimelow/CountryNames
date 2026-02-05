@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Map as MapIcon, Moon, Sun, ArrowLeft } from 'lucide-react';
+import { ACHIEVEMENTS } from './data/achievements';
 
 // Access Globals inside component to avoid race conditions
 // const MapBoard = window.MapBoard;
@@ -80,6 +81,17 @@ function App() {
   const [showPublish, setShowPublish] = useState(false);
   const [pendingScore, setPendingScore] = useState(null);
 
+  // User Stats & Achievements
+  const [userStats, setUserStats] = useState({
+      gamesPlayed: 0,
+      classicFound: 0,
+      flagsFound: 0,
+      capitalsFound: 0,
+      fastestWin: false
+  });
+  const [unlockedAchievements, setUnlockedAchievements] = useState([]);
+  const [newAchievement, setNewAchievement] = useState(null); // For notification
+
   // Derived State
   const activeCountries = useMemo(() => {
     if (continentFilter === "All") return countries;
@@ -136,6 +148,14 @@ function App() {
         const unsubscribe = window.db.collection('users').doc(user.uid).onSnapshot(doc => {
             if (doc.exists) {
                 setFirestoreUser(doc.data());
+                // Merge stats if present in firestore
+                const data = doc.data();
+                if (data.stats) {
+                    setUserStats(prev => ({ ...prev, ...data.stats }));
+                }
+                if (data.achievements) {
+                    setUnlockedAchievements(data.achievements);
+                }
             }
         }, err => console.error("Firestore user sync error:", err));
         return () => unsubscribe();
@@ -143,6 +163,18 @@ function App() {
         setFirestoreUser(null);
     }
   }, [user]);
+
+  // Local Storage Stats Listener (for guest/initial load)
+  useEffect(() => {
+      const storedStats = localStorage.getItem('user_stats');
+      if (storedStats) {
+          setUserStats(JSON.parse(storedStats));
+      }
+      const storedAchievements = localStorage.getItem('user_achievements');
+      if (storedAchievements) {
+          setUnlockedAchievements(JSON.parse(storedAchievements));
+      }
+  }, []);
 
   const displayUser = useMemo(() => {
     if (!user) return null;
@@ -383,6 +415,57 @@ function App() {
         timePoints = timeLeft * 2;
     }
     const totalPoints = basePoints + flagPoints + timePoints;
+
+    // --- UPDATE STATS & CHECK ACHIEVEMENTS ---
+    const newStats = { ...userStats };
+    newStats.gamesPlayed = (newStats.gamesPlayed || 0) + 1;
+
+    if (gameMode === 'classic') {
+        newStats.classicFound = (newStats.classicFound || 0) + effectiveFound.length;
+    } else if (gameMode === 'flags') {
+        newStats.flagsFound = (newStats.flagsFound || 0) + effectiveFound.length;
+    } else if (gameMode === 'capitals') {
+        newStats.capitalsFound = (newStats.capitalsFound || 0) + effectiveFound.length;
+    }
+
+    // Check fastest win
+    if (effectiveFound.length === targetList.length && timeLeft > timeLimit / 2) {
+        newStats.fastestWin = true;
+    }
+
+    setUserStats(newStats);
+    localStorage.setItem('user_stats', JSON.stringify(newStats));
+
+    // Check Achievements
+    const newUnlocked = [];
+    ACHIEVEMENTS.forEach(ach => {
+        if (!unlockedAchievements.includes(ach.id) && ach.condition(newStats)) {
+            newUnlocked.push(ach.id);
+        }
+    });
+
+    if (newUnlocked.length > 0) {
+        const updatedAchievements = [...unlockedAchievements, ...newUnlocked];
+        setUnlockedAchievements(updatedAchievements);
+        localStorage.setItem('user_achievements', JSON.stringify(updatedAchievements));
+        
+        // Notify
+        const firstAch = ACHIEVEMENTS.find(a => a.id === newUnlocked[0]);
+        setNewAchievement(firstAch);
+        setTimeout(() => setNewAchievement(null), 5000);
+        
+        // Update Firestore
+        if (user && window.db) {
+            window.db.collection('users').doc(user.uid).set({
+                stats: newStats,
+                achievements: updatedAchievements
+            }, { merge: true });
+        }
+    } else if (user && window.db) {
+        window.db.collection('users').doc(user.uid).set({
+            stats: newStats
+        }, { merge: true });
+    }
 
     // Prepare Score Data
     const scoreData = {
@@ -649,6 +732,10 @@ function App() {
           confirmPublish={confirmPublish}
           cancelPublish={cancelPublish}
           capitalsTarget={capitalsQuizTarget}
+          userStats={userStats}
+          achievements={ACHIEVEMENTS}
+          unlockedAchievements={unlockedAchievements}
+          newAchievement={newAchievement}
         />
       </div>
 
@@ -697,6 +784,9 @@ function App() {
             onClose={() => { setShowProfile(false); setViewingProfile(null); }}
             currentUser={user}
             targetUser={viewingProfile || displayUser}
+            stats={userStats}
+            achievements={ACHIEVEMENTS}
+            unlocked={unlockedAchievements}
         />
       )}
 

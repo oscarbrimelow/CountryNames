@@ -1,11 +1,12 @@
 import React from 'react';
 import { X, User } from 'lucide-react';
 
-const ProfileModal = ({ isOpen, onClose, currentUser, targetUser }) => {
+const ProfileModal = ({ isOpen, onClose, currentUser, targetUser, stats, achievements, unlocked }) => {
   if (!isOpen) return null;
 
   const UserProfile = window.UserProfile;
   const userToDisplay = targetUser || currentUser;
+  const isSelf = currentUser && userToDisplay.uid === currentUser.uid;
 
   // Modal is strictly for VIEWING (Read-Only)
   // Editing is done in the "Account" tab.
@@ -30,6 +31,9 @@ const ProfileModal = ({ isOpen, onClose, currentUser, targetUser }) => {
             <UserProfile 
                 user={userToDisplay} 
                 isEditable={isEditable} 
+                stats={isSelf ? stats : undefined}
+                achievements={achievements}
+                unlocked={isSelf ? unlocked : undefined}
             />
         ) : (
             <p className="text-red-500">UserProfile component missing.</p>
