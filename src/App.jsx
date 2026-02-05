@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Map as MapIcon, Moon, Sun, ArrowLeft } from 'lucide-react';
-import { ACHIEVEMENTS } from './data/achievements';
 
 // Access Globals inside component to avoid race conditions
 // const MapBoard = window.MapBoard;
@@ -25,6 +24,7 @@ function App() {
   const geoData = window.geoData || {};
   const { levenshteinDistance } = window.gameHelpers || {};
   const { getDailyCountry, getDailySeed, getDailyStatus, saveDailyStatus } = window.dailyLogic || {};
+  const ACHIEVEMENTS = window.ACHIEVEMENTS || [];
 
   // Auth State
   const [user, setUser] = useState(null);

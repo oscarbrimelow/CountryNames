@@ -83,3 +83,7 @@ export const ACHIEVEMENTS = [
         condition: (stats) => stats.dailyWins >= 1
     }
 ];
+
+if (typeof window !== 'undefined') {
+    window.ACHIEVEMENTS = ACHIEVEMENTS;
+}
