@@ -530,18 +530,6 @@ function App() {
 
       {/* Map Layer - Always Rendered but controlled */}
       <div className={`absolute inset-0 transition-all duration-700 ${viewingMap ? 'z-40' : 'z-0'}`}>
-          {viewingMap && (
-            <div className="absolute top-4 left-4 z-50">
-               <button 
-                 onClick={() => setViewingMap(false)}
-                 className="px-4 py-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-lg text-white font-bold text-sm hover:bg-zinc-800 transition-all flex items-center gap-2 shadow-lg"
-               >
-                 <ArrowLeft className="w-4 h-4" />
-                 Back to Menu
-               </button>
-            </div>
-          )}
-          
           <MapBoard 
             foundCountries={foundCountries} 
             missedCountries={missedCountries}

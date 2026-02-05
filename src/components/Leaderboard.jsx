@@ -178,9 +178,9 @@ const Leaderboard = ({ onClose, initialFilter = 'All', onUserClick }) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 onClick={() => onUserClick && onUserClick({ uid: score.userId, displayName: score.userName, photoURL: score.photoURL })}
-                className="bg-white/5 border border-white/5 rounded-xl p-4 flex items-center gap-4 hover:bg-white/10 transition-colors cursor-pointer group"
+                className="bg-white/5 border border-white/5 rounded-xl p-3 md:p-4 flex items-center gap-3 md:gap-4 hover:bg-white/10 transition-colors cursor-pointer group"
               >
-                <div className={`w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm ${
+                <div className={`w-6 h-6 md:w-8 md:h-8 flex items-center justify-center rounded-full font-bold text-xs md:text-sm ${
                   index === 0 ? 'bg-yellow-500/20 text-yellow-500' :
                   index === 1 ? 'bg-slate-400/20 text-slate-400' :
                   index === 2 ? 'bg-amber-600/20 text-amber-600' :
@@ -206,11 +206,11 @@ const Leaderboard = ({ onClose, initialFilter = 'All', onUserClick }) => {
                         />
                     )}
 
-                    <span className="font-medium text-slate-200 truncate text-sm group-hover:text-emerald-400 transition-colors">
+                    <span className="font-medium text-slate-200 truncate text-xs md:text-sm group-hover:text-emerald-400 transition-colors">
                       {score.userName || 'Anonymous'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-slate-500">
+                  <div className="flex items-center gap-2 md:gap-3 text-[10px] md:text-xs text-slate-500">
                     <span className="flex items-center gap-1">
                       <Globe className="w-3 h-3" />
                       {score.region}
@@ -227,15 +227,15 @@ const Leaderboard = ({ onClose, initialFilter = 'All', onUserClick }) => {
                 </div>
 
                 <div className="text-right">
-                  <div className="text-xl font-bold text-emerald-400 font-mono">
+                  <div className="text-lg md:text-xl font-bold text-emerald-400 font-mono">
                     {score.score}
                   </div>
                   {score.points > 0 && (
-                      <div className="text-[10px] text-amber-400 font-bold tracking-wider uppercase">
+                      <div className="text-[8px] md:text-[10px] text-amber-400 font-bold tracking-wider uppercase">
                           {score.points} pts
                       </div>
                   )}
-                  <div className="text-xs text-slate-500 font-mono">
+                  <div className="text-[10px] md:text-xs text-slate-500 font-mono">
                     / {score.total}
                   </div>
                 </div>

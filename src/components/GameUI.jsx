@@ -123,10 +123,10 @@ const GameUI = ({
     <div className="w-full h-full relative pointer-events-none">
       
       {/* Auth Button / Profile Shortcut - Always Visible */}
-      <div className="absolute top-6 right-6 pointer-events-auto z-50">
+      <div className="absolute top-4 right-4 md:top-6 md:right-6 pointer-events-auto z-50">
         <button 
           onClick={() => user ? setActiveTab('account') : onShowAuth()}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md border shadow-xl transition-all ${
+          className={`flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 rounded-full backdrop-blur-md border shadow-xl transition-all ${
             user 
               ? activeTab === 'account' 
                   ? 'bg-emerald-500 text-zinc-900 border-emerald-400 font-bold'
@@ -156,13 +156,13 @@ const GameUI = ({
 
       {/* Back to Menu Button - Only when viewing map */}
       {viewingMap && gameStatus !== 'playing' && (
-        <div className="absolute top-6 left-6 pointer-events-auto z-50">
+        <div className="absolute top-4 left-4 md:top-6 md:left-6 pointer-events-auto z-50">
             <button 
                 onClick={() => setViewingMap(false)}
-                className="flex items-center gap-2 px-6 py-3 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-full shadow-2xl text-white hover:bg-zinc-800 transition-all font-bold group"
+                className="flex items-center gap-2 px-4 py-2 md:px-6 md:py-3 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-full shadow-2xl text-white hover:bg-zinc-800 transition-all font-bold group text-sm md:text-base"
             >
-                <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                Back to Menu
+                <ArrowLeft className="w-4 h-4 md:w-5 md:h-5 group-hover:-translate-x-1 transition-transform" />
+                Back
             </button>
         </div>
       )}
@@ -172,20 +172,20 @@ const GameUI = ({
         <motion.div 
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="absolute top-6 left-1/2 -translate-x-1/2 pointer-events-auto z-50 flex items-center gap-4"
+            className="absolute top-16 md:top-6 left-1/2 -translate-x-1/2 pointer-events-auto z-50 flex items-center gap-2 md:gap-4 w-full justify-center px-4"
         >
-            <div className="flex items-center gap-6 px-6 py-3 bg-zinc-900/40 backdrop-blur-md border border-white/10 rounded-full shadow-2xl text-slate-100">
+            <div className="flex items-center gap-3 md:gap-6 px-4 py-2 md:px-6 md:py-3 bg-zinc-900/40 backdrop-blur-md border border-white/10 rounded-full shadow-2xl text-slate-100">
                 <div className="flex items-center gap-2">
                     <Timer className="w-4 h-4 text-emerald-400" />
-                    <span className="font-mono font-bold tracking-widest text-lg">{formatTime(timeLeft)}</span>
+                    <span className="font-mono font-bold tracking-widest text-sm md:text-lg">{formatTime(timeLeft)}</span>
                 </div>
                 <div className="w-px h-4 bg-white/10"></div>
                 <div className="flex items-center gap-2">
                     <Trophy className="w-4 h-4 text-yellow-400" />
-                    <span className="font-mono font-bold text-lg">{score}/{totalCountries}</span>
+                    <span className="font-mono font-bold text-sm md:text-lg">{score}/{totalCountries}</span>
                 </div>
-                <div className="w-px h-4 bg-white/10"></div>
-                <div className="flex items-center gap-2">
+                <div className="w-px h-4 bg-white/10 hidden sm:block"></div>
+                <div className="flex items-center gap-2 hidden sm:flex">
                     <Activity className="w-4 h-4 text-blue-400" />
                     <span className="font-mono font-bold text-lg">{progress}%</span>
                 </div>
@@ -213,7 +213,7 @@ const GameUI = ({
         <motion.div 
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="absolute top-24 bottom-36 right-6 w-64 pointer-events-auto flex flex-col gap-2 overflow-hidden"
+            className="absolute top-24 bottom-36 right-6 w-64 pointer-events-auto hidden md:flex flex-col gap-2 overflow-hidden"
         >
             <div className="bg-zinc-900/30 backdrop-blur-md border border-white/5 rounded-2xl p-4 h-full overflow-y-auto scrollbar-hide">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-white/5 pb-2">Recent Finds</h3>
@@ -290,7 +290,7 @@ const GameUI = ({
         <motion.div 
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="absolute bottom-12 left-1/2 -translate-x-1/2 w-full max-w-lg px-4 pointer-events-auto z-50"
+            className="absolute bottom-4 md:bottom-12 left-1/2 -translate-x-1/2 w-[95%] md:w-full max-w-lg px-2 md:px-4 pointer-events-auto z-50"
         >
             <motion.form 
                 onSubmit={handleSubmit} 
@@ -303,7 +303,7 @@ const GameUI = ({
                     <button 
                         type="button"
                         onClick={onSkip}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-slate-500 hover:text-amber-400 transition-colors z-20"
+                        className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-2 text-slate-500 hover:text-amber-400 transition-colors z-20"
                         title="Skip"
                     >
                         <SkipForward className="w-5 h-5" />
@@ -315,7 +315,7 @@ const GameUI = ({
                     value={input}
                     onChange={handleChange}
                     placeholder="Type a country name..."
-                    className={`w-full bg-zinc-900/60 backdrop-blur-xl text-slate-100 placeholder:text-slate-500 text-center text-xl font-light tracking-wide py-4 px-6 rounded-2xl border shadow-2xl focus:outline-none transition-all duration-300 ${
+                    className={`w-full bg-zinc-900/60 backdrop-blur-xl text-slate-100 placeholder:text-slate-500 text-center text-lg md:text-xl font-light tracking-wide py-3 md:py-4 px-6 rounded-2xl border shadow-2xl focus:outline-none transition-all duration-300 ${
                         inputStyle === 'error' || inputStyle === 'close'
                             ? 'border-red-500 shadow-red-500/20'
                             : 'border-white/10 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50'
@@ -324,7 +324,7 @@ const GameUI = ({
                 <button 
                     type="button"
                     onClick={onGiveUp}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-500 hover:text-red-400 transition-colors"
+                    className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-2 text-slate-500 hover:text-red-400 transition-colors"
                     title="Give Up"
                 >
                     <X className="w-5 h-5" />
@@ -335,17 +335,17 @@ const GameUI = ({
 
       {/* Start / Menu Screen - Overlay */}
       {gameStatus !== 'playing' && !viewingMap && (
-        <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm z-50 flex items-center justify-center pointer-events-auto p-4">
+        <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm z-50 flex items-center justify-center pointer-events-auto p-2 md:p-4">
             <motion.div 
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="bg-zinc-900/40 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl max-w-5xl w-full text-center flex flex-col h-[85vh] md:h-[800px] md:max-h-[90vh] overflow-hidden"
+                className="bg-zinc-900/40 backdrop-blur-xl border border-white/10 p-4 md:p-8 rounded-3xl shadow-2xl max-w-5xl w-full text-center flex flex-col h-full md:h-[800px] md:max-h-[90vh] overflow-hidden"
             >
-                <div className="flex flex-col items-center mb-6">
-                    <h1 className="text-4xl md:text-6xl font-black bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent tracking-tighter mb-2">
+                <div className="flex flex-col items-center mb-4 md:mb-6 mt-4 md:mt-0">
+                    <h1 className="text-3xl md:text-6xl font-black bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent tracking-tighter mb-2">
                         GEOMASTER
                     </h1>
-                    <p className="text-slate-400 font-light tracking-widest uppercase text-xs md:text-sm">The Ultimate Geography Challenge</p>
+                    <p className="text-slate-400 font-light tracking-widest uppercase text-[10px] md:text-sm">The Ultimate Geography Challenge</p>
                 </div>
 
                 {/* Main Navigation Tabs */}
