@@ -246,55 +246,7 @@ function App() {
       nextCapitalTarget(queue);
   };
 
-  const startDailyGame = () => {
-      const { seed, date } = getDailySeed();
-      const data = window.geoData || geoData;
-      // Filter valid countries
-      const pool = countries.filter(c => data[c.alpha3]?.coords);
-      
-      if (pool.length === 0) return;
-
-      const target = getDailyCountry(pool, date);
-      
-      const status = getDailyStatus(date) || { 
-          solved: false, 
-          guesses: [], 
-          cluesRevealed: 1,
-          won: false 
-      };
-
-      setDailyTarget(target);
-      setDailyStatusState(status);
-      
-      if (status.won) {
-          setGameStatus('won');
-      } else {
-          setGameStatus('playing');
-      }
-  };
-
-  const handleDailyGuess = (isCorrect, cluesCount, newGuesses) => {
-      const { date } = getDailySeed();
-      const status = {
-          solved: isCorrect === true, 
-          guesses: newGuesses || (dailyStatusState?.guesses || []),
-          cluesRevealed: cluesCount,
-          won: isCorrect === true
-      };
-      
-      setDailyStatusState(status);
-      saveDailyStatus(date, status);
-      
-      if (isCorrect === true) {
-          setGameStatus('won');
-          
-          // Stats & Achievements
-          const newStats = { ...userStats };
-          // Could track daily wins here
-          
-          // Check for achievements if needed
-      }
-  };
+  // Removed duplicate daily game logic
 
   const nextCapitalTarget = (queue) => {
       if (!queue || queue.length === 0) {
