@@ -25,6 +25,8 @@ function App() {
   const { levenshteinDistance } = window.gameHelpers || {};
   const { getDailyCountry, getDailySeed, getDailyStatus, saveDailyStatus } = window.dailyLogic || {};
   const ACHIEVEMENTS = window.ACHIEVEMENTS || [];
+  const audioManager = window.audioManager || {};
+  const { XP_VALUES } = window.levelSystem || {};
 
   // Auth State
   const [user, setUser] = useState(null);
@@ -93,7 +95,8 @@ function App() {
       classicFound: 0,
       flagsFound: 0,
       capitalsFound: 0,
-      fastestWin: false
+      fastestWin: false,
+      xp: 0
   });
   const [unlockedAchievements, setUnlockedAchievements] = useState([]);
   const [newAchievement, setNewAchievement] = useState(null); // For notification
@@ -381,10 +384,17 @@ function App() {
       
       if (isCorrect) {
           setGameStatus('won');
-          
+          if (audioManager.playVictory) audioManager.playVictory();
+
           // Update Stats
           const newStats = { ...userStats };
           newStats.dailyWins = (newStats.dailyWins || 0) + 1;
+          
+          // XP for Daily Win
+          if (XP_VALUES) {
+              newStats.xp = (newStats.xp || 0) + XP_VALUES.DAILY_WIN;
+          }
+          
           setUserStats(newStats);
           localStorage.setItem('user_stats', JSON.stringify(newStats));
           
@@ -394,10 +404,43 @@ function App() {
               setUnlockedAchievements(newUnlocked);
               localStorage.setItem('user_achievements', JSON.stringify(newUnlocked));
               
-              // Notify
-              const ach = ACHIEVEMENTS.find(a => a.id === 'daily_detective');
-              setNewAchievement(ach);
-              setTimeout(() => setNewAchievement(null), 5000);
+              if (audioManager.playAchievement) audioManager.playAchievement();
+
+              // XP for Achievement
+              if (XP_VALUES) {
+                   // Re-read stats to ensure we don't overwrite
+                   const latestStats = { ...newStats }; 
+                   latestStats.xp = (latestStats.xp || 0) + XP_VALUES.ACHIEVEMENT_UNLOCK;
+                   setUserStats(latestStats);
+                   localStorage.setItem('user_stats', JSON.stringify(latestStats));
+                   
+                   // Sync Firestore
+                   if (user && window.db) {
+                        window.db.collection('users').doc(user.uid).set({
+                            stats: latestStats,
+                            achievements: newUnlocked
+                        }, { merge: true });
+                   }
+              } else {
+                  // Notify
+                  const ach = ACHIEVEMENTS.find(a => a.id === 'daily_detective');
+                  setNewAchievement(ach);
+                  setTimeout(() => setNewAchievement(null), 5000);
+                  
+                  if (user && window.db) {
+                    window.db.collection('users').doc(user.uid).set({
+                        stats: newStats,
+                        achievements: newUnlocked
+                    }, { merge: true });
+                  }
+              }
+          } else {
+             // Just sync stats if no achievement
+             if (user && window.db) {
+                window.db.collection('users').doc(user.uid).set({
+                    stats: newStats
+                }, { merge: true });
+             }
           }
       }
   };
@@ -499,6 +542,16 @@ function App() {
         newStats.fastestWin = true;
     }
 
+    // Win Audio
+    if (effectiveFound.length > 0 && effectiveFound.length === targetList.length) {
+        if (audioManager.playVictory) audioManager.playVictory();
+        
+        // Bonus XP for winning
+        if (XP_VALUES) {
+            newStats.xp = (newStats.xp || 0) + XP_VALUES.GAME_COMPLETE_BONUS;
+        }
+    }
+
     setUserStats(newStats);
     localStorage.setItem('user_stats', JSON.stringify(newStats));
 
@@ -520,12 +573,31 @@ function App() {
         setNewAchievement(firstAch);
         setTimeout(() => setNewAchievement(null), 5000);
         
-        // Update Firestore
-        if (user && window.db) {
-            window.db.collection('users').doc(user.uid).set({
-                stats: newStats,
-                achievements: updatedAchievements
-            }, { merge: true });
+        // Play Achievement Sound
+        if (audioManager.playAchievement) audioManager.playAchievement();
+
+        // Add XP for Achievements
+        if (XP_VALUES) {
+            const xpGain = newUnlocked.length * XP_VALUES.ACHIEVEMENT_UNLOCK;
+            const finalStats = { ...newStats, xp: (newStats.xp || 0) + xpGain };
+            setUserStats(finalStats);
+            localStorage.setItem('user_stats', JSON.stringify(finalStats));
+            
+            // Sync with Firestore
+             if (user && window.db) {
+                window.db.collection('users').doc(user.uid).set({
+                    stats: finalStats,
+                    achievements: updatedAchievements
+                }, { merge: true });
+            }
+        } else {
+             // Update Firestore (No extra XP)
+            if (user && window.db) {
+                window.db.collection('users').doc(user.uid).set({
+                    stats: newStats,
+                    achievements: updatedAchievements
+                }, { merge: true });
+            }
         }
     } else if (user && window.db) {
         window.db.collection('users').doc(user.uid).set({
@@ -616,6 +688,18 @@ function App() {
              // Success
              const newFound = [...foundCountries, capitalsQuizTarget.id];
              setFoundCountries(newFound);
+             if (audioManager.playPop) audioManager.playPop();
+
+             // XP
+             if (XP_VALUES) {
+                 setUserStats(prev => ({
+                     ...prev,
+                     capitalsFound: prev.capitalsFound + 1,
+                     xp: (prev.xp || 0) + XP_VALUES.CAPITAL_FOUND
+                 }));
+             } else {
+                 setUserStats(prev => ({ ...prev, capitalsFound: prev.capitalsFound + 1 }));
+             }
              
              // Next
              const newQueue = capitalsQuizQueue.slice(1);
@@ -631,6 +715,18 @@ function App() {
              // Success
              const newFound = [...foundCountries, capitalsQuizTarget.id];
              setFoundCountries(newFound);
+             if (audioManager.playPop) audioManager.playPop();
+
+             // XP
+             if (XP_VALUES) {
+                 setUserStats(prev => ({
+                     ...prev,
+                     capitalsFound: prev.capitalsFound + 1,
+                     xp: (prev.xp || 0) + XP_VALUES.CAPITAL_FOUND
+                 }));
+             } else {
+                 setUserStats(prev => ({ ...prev, capitalsFound: prev.capitalsFound + 1 }));
+             }
              
              // Next
              const newQueue = capitalsQuizQueue.slice(1);
@@ -640,6 +736,7 @@ function App() {
              return { status: 'success' };
         }
         
+        if (audioManager.playError) audioManager.playError();
         return { status: 'error' };
     }
 
@@ -662,6 +759,18 @@ function App() {
               setFoundCountries(prev => [...prev, match.id]);
               setBonusMessage("Correct!");
               setTimeout(() => setBonusMessage(null), 1500);
+              if (audioManager.playPop) audioManager.playPop();
+
+              // XP
+              if (XP_VALUES) {
+                  setUserStats(prev => ({
+                      ...prev,
+                      flagsFound: prev.flagsFound + 1,
+                      xp: (prev.xp || 0) + XP_VALUES.FLAG_FOUND
+                  }));
+              } else {
+                  setUserStats(prev => ({ ...prev, flagsFound: prev.flagsFound + 1 }));
+              }
               
               const newQueue = flagQuizQueue.slice(1);
               setFlagQuizQueue(newQueue);
@@ -670,12 +779,25 @@ function App() {
           } else {
                // Wrong guess for flag quiz
                // Maybe shake?
+               if (audioManager.playError) audioManager.playError();
                return { status: 'close' }; // Using 'close' to trigger shake
           }
       }
 
       // Classic Mode Logic
       setFoundCountries(prev => [...prev, match.id]);
+      if (audioManager.playPop) audioManager.playPop();
+
+      // XP
+      if (XP_VALUES) {
+          setUserStats(prev => ({
+              ...prev,
+              classicFound: prev.classicFound + 1,
+              xp: (prev.xp || 0) + XP_VALUES.CLASSIC_FOUND
+          }));
+      } else {
+          setUserStats(prev => ({ ...prev, classicFound: prev.classicFound + 1 }));
+      }
       
       // Bonus Check
       if (bonusFlagCountry && match.id === bonusFlagCountry.id) {
@@ -723,10 +845,12 @@ function App() {
         });
         
         if (closeMatch) {
+            if (audioManager.playError) audioManager.playError();
             return { status: 'close' };
         }
     }
 
+    if (audioManager.playError) audioManager.playError();
     return { status: 'fail' };
   };
 

@@ -14,6 +14,7 @@ const UserProfile = ({ user, isEditable, onSave, stats: initialStats, achievemen
 
   const countries = window.countries || [];
   const { getFlagUrl } = window.gameHelpers || {};
+  const { calculateLevel, getLevelProgress, getRankTitle } = window.levelSystem || {};
 
   useEffect(() => {
     if (user) {
@@ -152,6 +153,37 @@ const UserProfile = ({ user, isEditable, onSave, stats: initialStats, achievemen
                         className="text-xs text-slate-500 bg-transparent border-b border-white/10 focus:border-emerald-500 outline-none w-48 text-center pb-1"
                     />
                 )}
+            </div>
+
+            {/* Level & XP Section */}
+            <div className="bg-black/20 rounded-2xl p-4 border border-white/5">
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-bold text-xl text-white shadow-lg shadow-emerald-500/20">
+                            {calculateLevel ? calculateLevel(stats.xp || 0) : 1}
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Current Rank</span>
+                            <span className="text-white font-bold">{getRankTitle ? getRankTitle(calculateLevel ? calculateLevel(stats.xp || 0) : 1) : 'Novice'}</span>
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <span className="text-emerald-400 font-bold text-lg">{stats.xp || 0}</span>
+                        <span className="text-slate-500 text-xs font-bold ml-1">XP</span>
+                    </div>
+                </div>
+                
+                {/* Progress Bar */}
+                <div className="relative h-2 bg-zinc-800 rounded-full overflow-hidden">
+                    <div 
+                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-1000 ease-out"
+                        style={{ width: `${getLevelProgress ? getLevelProgress(stats.xp || 0) : 0}%` }}
+                    ></div>
+                </div>
+                <div className="flex justify-between mt-1">
+                    <span className="text-[10px] text-slate-500">Level {calculateLevel ? calculateLevel(stats.xp || 0) : 1}</span>
+                    <span className="text-[10px] text-slate-500">Level {(calculateLevel ? calculateLevel(stats.xp || 0) : 1) + 1}</span>
+                </div>
             </div>
 
             {/* Fields */}

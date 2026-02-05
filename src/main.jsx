@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 
 const waitForGlobals = (attempts = 0) => {
-  const required = ['App', 'MapBoard', 'GameUI', 'StudyModal', 'StatsModal', 'CountryList', 'ListModal', 'AuthModal', 'Leaderboard', 'ProfileModal', 'AboutModal', 'UserProfile', 'countries', 'gameHelpers'];
+  const required = ['App', 'MapBoard', 'GameUI', 'StudyModal', 'StatsModal', 'CountryList', 'ListModal', 'AuthModal', 'Leaderboard', 'ProfileModal', 'AboutModal', 'UserProfile', 'countries', 'gameHelpers', 'audioManager', 'levelSystem'];
   const missing = required.filter(k => !window[k]);
   
   if (missing.length === 0) {
