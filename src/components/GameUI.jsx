@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Timer, Trophy, Activity, Play, SkipForward, BarChart2, List, X, Share2, Flag, User, Globe, Map, Navigation, Lock, Info, ShieldAlert, LogOut, BookOpen, ArrowLeft, FileText } from 'lucide-react';
+import { Timer, Trophy, Activity, Play, SkipForward, BarChart2, List, X, Share2, Flag, User, Globe, Map, Navigation, Lock, Info, ShieldAlert, LogOut, BookOpen, ArrowLeft, FileText, Volume2, VolumeX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const GameUI = ({ 
@@ -44,11 +44,27 @@ const GameUI = ({
   const { getFlagUrl, generateShareText } = window.gameHelpers || {};
   const Leaderboard = window.Leaderboard;
   const UserProfile = window.UserProfile;
+  const audioManager = window.audioManager;
   
   const [input, setInput] = useState("");
   // const [shake, setShake] = useState(false); // Removed shake state
   const [inputStyle, setInputStyle] = useState("normal");
   const [activeTab, setActiveTab] = useState('play'); // 'play', 'leaderboard', 'account', 'about'
+  const [muted, setMuted] = useState(false);
+
+  useEffect(() => {
+      if (audioManager) {
+          setMuted(audioManager.muted);
+      }
+  }, []);
+
+  const toggleMute = () => {
+      if (audioManager) {
+          const newMuted = !muted;
+          setMuted(newMuted);
+          audioManager.setMuted(newMuted);
+      }
+  };
   
   // Play Tab Sub-Views
   const [playView, setPlayView] = useState('menu'); // 'menu', 'quizzes', 'learn'
@@ -401,7 +417,16 @@ const GameUI = ({
                 animate={{ scale: 1, opacity: 1 }}
                 className="bg-zinc-900/40 backdrop-blur-xl border border-white/10 p-4 md:p-8 rounded-3xl shadow-2xl max-w-5xl w-full text-center flex flex-col h-full md:h-[800px] md:max-h-[90vh] overflow-hidden"
             >
-                <div className="flex flex-col items-center mb-4 md:mb-6 mt-4 md:mt-0">
+                <div className="flex flex-col items-center mb-4 md:mb-6 mt-4 md:mt-0 relative">
+                    {/* Audio Toggle */}
+                    <button 
+                        onClick={toggleMute}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                        title={muted ? "Unmute Sound" : "Mute Sound"}
+                    >
+                        {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                    </button>
+
                     <h1 className="text-3xl md:text-6xl font-black bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent tracking-tighter mb-2">
                         GEOMASTER
                     </h1>
