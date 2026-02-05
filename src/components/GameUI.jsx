@@ -34,14 +34,15 @@ const GameUI = ({
   showPublish,
   pendingScore,
   confirmPublish,
-  cancelPublish
+  cancelPublish,
+  capitalsTarget // Target for capitals mode
 }) => {
   const { getFlagUrl, generateShareText } = window.gameHelpers || {};
   const Leaderboard = window.Leaderboard;
   const UserProfile = window.UserProfile;
   
   const [input, setInput] = useState("");
-  const [shake, setShake] = useState(false);
+  // const [shake, setShake] = useState(false); // Removed shake state
   const [inputStyle, setInputStyle] = useState("normal");
   const [activeTab, setActiveTab] = useState('play'); // 'play', 'leaderboard', 'account', 'about'
   
@@ -51,6 +52,10 @@ const GameUI = ({
   const [selectedMode, setSelectedMode] = useState('classic');
   const [flagSettings, setFlagSettings] = useState({
       filter: '25', // '25', '50', 'continent'
+  });
+  // Capitals settings are same structure for now
+  const [capitalsSettings, setCapitalsSettings] = useState({
+      filter: '25',
   });
   // const [viewingMap, setViewingMap] = useState(false); // Lifted to App.jsx
   const inputRef = useRef(null);
@@ -66,10 +71,10 @@ const GameUI = ({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (input.trim().length > 0) {
-        setShake(true);
+        // setShake(true); // Removed shake
         setInputStyle("error");
         setTimeout(() => {
-            setShake(false);
+            // setShake(false); // Removed shake
             setInputStyle("normal");
         }, 500);
     }
@@ -84,12 +89,12 @@ const GameUI = ({
     
     if (result.status === 'success') {
       setInput("");
-      setShake(false);
+      // setShake(false); // Removed shake
     } else if (result.status === 'close') {
-      setShake(true);
+      // setShake(true); // Removed shake
       setInputStyle("close");
       setTimeout(() => {
-          setShake(false);
+          // setShake(false); // Removed shake
           setInputStyle("normal"); // Reset style after shake
       }, 500);
     }
@@ -107,7 +112,7 @@ const GameUI = ({
   const gameModes = [
     { id: 'classic', name: 'Name Countries', icon: Globe, description: 'Identify countries on the map', status: 'active' },
     { id: 'flags', name: 'Flag Quiz', icon: Flag, description: 'Match flags to countries', status: 'active' },
-    { id: 'capitals', name: 'Capital Cities', icon: Navigation, description: 'Name the capital cities', status: 'coming_soon' },
+    { id: 'capitals', name: 'Capital Cities', icon: Navigation, description: 'Name the capital cities', status: 'active' },
     { id: 'states', name: 'State Challenge', icon: Map, description: 'Identify states and provinces', status: 'coming_soon' },
   ];
 
@@ -285,6 +290,31 @@ const GameUI = ({
         )}
       </AnimatePresence>
 
+      {/* Capitals Mode Target Display */}
+      <AnimatePresence>
+        {gameStatus === 'playing' && capitalsTarget && (
+           <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="absolute top-24 md:top-32 left-1/2 -translate-x-1/2 z-40 pointer-events-none"
+           >
+               <div className="bg-zinc-900/80 backdrop-blur-xl border border-blue-500/30 px-6 py-4 rounded-2xl shadow-2xl flex flex-col items-center gap-1">
+                   <div className="text-xs font-bold text-blue-400 uppercase tracking-widest">What is the capital of</div>
+                   <div className="text-xl md:text-3xl font-black text-white text-center">
+                       {capitalsTarget.name}
+                   </div>
+                   {capitalsTarget.continent && (
+                       <div className="flex items-center gap-2 text-slate-400 text-xs mt-1">
+                           <Globe className="w-3 h-3" />
+                           {capitalsTarget.continent}
+                       </div>
+                   )}
+               </div>
+           </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Bottom Input Field - Only when playing */}
       {gameStatus === 'playing' && (
         <motion.div 
@@ -295,7 +325,7 @@ const GameUI = ({
             <motion.form 
                 onSubmit={handleSubmit} 
                 className="relative group w-full"
-                animate={shake ? { x: [-10, 10, -10, 10, 0] } : {}}
+                // animate={shake ? { x: [-10, 10, -10, 10, 0] } : {}} // Removed shake animation
                 transition={{ duration: 0.4 }}
             >
                 {/* Skip Button - Left side */}
@@ -314,7 +344,10 @@ const GameUI = ({
                     type="text"
                     value={input}
                     onChange={handleChange}
-                    placeholder="Type a country name..."
+                    placeholder={
+                        capitalsTarget ? "Type the capital city..." : 
+                        "Type a country name..."
+                    }
                     className={`w-full bg-zinc-900/60 backdrop-blur-xl text-slate-100 placeholder:text-slate-500 text-center text-lg md:text-xl font-light tracking-wide py-3 md:py-4 px-6 rounded-2xl border shadow-2xl focus:outline-none transition-all duration-300 ${
                         inputStyle === 'error' || inputStyle === 'close'
                             ? 'border-red-500 shadow-red-500/20'
@@ -567,6 +600,63 @@ const GameUI = ({
                                                         </div>
                                                     )}
                                                 </>
+                                            ) : selectedMode === 'capitals' ? (
+                                                <>
+                                                    <div>
+                                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Difficulty</label>
+                                                        <div className="grid grid-cols-1 gap-2">
+                                                            <button
+                                                                onClick={() => setCapitalsSettings(s => ({ ...s, filter: '25' }))}
+                                                                className={`py-3 px-4 rounded-xl text-sm font-bold text-left transition-all border ${
+                                                                    capitalsSettings.filter === '25' 
+                                                                        ? 'bg-blue-500/20 border-blue-500 text-blue-400' 
+                                                                        : 'bg-zinc-900 border-white/10 text-slate-400 hover:border-white/20'
+                                                                }`}
+                                                            >
+                                                                Top 25 Most Popular
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setCapitalsSettings(s => ({ ...s, filter: '50' }))}
+                                                                className={`py-3 px-4 rounded-xl text-sm font-bold text-left transition-all border ${
+                                                                    capitalsSettings.filter === '50' 
+                                                                        ? 'bg-blue-500/20 border-blue-500 text-blue-400' 
+                                                                        : 'bg-zinc-900 border-white/10 text-slate-400 hover:border-white/20'
+                                                                }`}
+                                                            >
+                                                                Top 50 Most Popular
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setCapitalsSettings(s => ({ ...s, filter: 'continent' }))}
+                                                                className={`py-3 px-4 rounded-xl text-sm font-bold text-left transition-all border ${
+                                                                    capitalsSettings.filter === 'continent' 
+                                                                        ? 'bg-blue-500/20 border-blue-500 text-blue-400' 
+                                                                        : 'bg-zinc-900 border-white/10 text-slate-400 hover:border-white/20'
+                                                                }`}
+                                                            >
+                                                                By Continent
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    {capitalsSettings.filter === 'continent' && (
+                                                        <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Select Continent</label>
+                                                            <select 
+                                                                value={continentFilter} 
+                                                                onChange={(e) => setContinentFilter(e.target.value)}
+                                                                className="w-full bg-zinc-900 border border-white/10 text-slate-200 text-sm rounded-xl p-3 focus:outline-none focus:border-blue-500/50 transition-colors"
+                                                            >
+                                                                <option value="All">All Continents</option>
+                                                                <option value="Europe">Europe</option>
+                                                                <option value="Asia">Asia</option>
+                                                                <option value="Africa">Africa</option>
+                                                                <option value="North America">North America</option>
+                                                                <option value="South America">South America</option>
+                                                                <option value="Oceania">Oceania</option>
+                                                            </select>
+                                                        </div>
+                                                    )}
+                                                </>
                                             ) : (
                                                 <div>
                                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Region</label>
@@ -632,7 +722,12 @@ const GameUI = ({
                                     </div>
 
                                     <button 
-                                        onClick={() => onStart({ mode: selectedMode, settings: flagSettings })}
+                                        onClick={() => onStart({ 
+                                            mode: selectedMode, 
+                                            settings: selectedMode === 'flags' ? flagSettings : 
+                                                      selectedMode === 'capitals' ? capitalsSettings : 
+                                                      { filter: 'continent' }
+                                        })}
                                         className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-zinc-900 font-black text-lg uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98] mt-6"
                                     >
                                         {gameStatus === 'ended' ? 'Play Again' : 'Start Game'}

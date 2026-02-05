@@ -56,6 +56,11 @@ function App() {
   const [quizTotal, setQuizTotal] = useState(0);
   const [quizCountries, setQuizCountries] = useState([]); // Store the actual pool of countries for the quiz
 
+  // Capitals Quiz State
+  const [capitalsQuizTarget, setCapitalsQuizTarget] = useState(null);
+  const [capitalsQuizQueue, setCapitalsQuizQueue] = useState([]);
+  const [capitalsQuizSettings, setCapitalsQuizSettings] = useState(null);
+
   // Map State
   const [zoom, setZoom] = useState(1);
   const [center, setCenter] = useState([0, 20]);
@@ -167,7 +172,72 @@ function App() {
     return () => clearInterval(timer);
   }, [gameStatus, timeLeft]);
 
-  // Game Logic
+    if (gameMode === 'flags' || gameMode === 'capitals') {
+       // Flag and Capital mode handles its own next logic in checkAnswer/handleInput
+       // But if we need to skip...
+       return;
+    }
+  }, [gameMode]);
+
+  const startCapitalsQuiz = (settings) => {
+      setCapitalsQuizSettings(settings);
+      const data = window.geoData || geoData;
+      
+      let pool = countries;
+      if (settings.filter === '25' || settings.filter === '50') {
+          const limit = parseInt(settings.filter);
+          pool = countries
+              .filter(c => data[c.alpha3]) 
+              .sort((a, b) => (data[b.alpha3]?.pop || 0) - (data[a.alpha3]?.pop || 0))
+              .slice(0, limit);
+      } else if (settings.filter === 'continent') {
+            if (continentFilter !== "All") {
+                pool = countries.filter(c => c.continent === continentFilter);
+            }
+      }
+      
+      // Filter out countries without capitals
+      pool = pool.filter(c => c.capital && c.capital.length > 0);
+
+      if (pool.length === 0) {
+          alert("No valid countries found for this selection.");
+          endGame();
+          return;
+      }
+      
+      // Shuffle
+      const queue = pool.map(c => c.id).sort(() => Math.random() - 0.5);
+      setCapitalsQuizQueue(queue);
+      setQuizTotal(queue.length);
+      setQuizCountries(pool);
+      
+      // Pick first
+      nextCapitalTarget(queue);
+  };
+
+  const nextCapitalTarget = (queue) => {
+      if (!queue || queue.length === 0) {
+          endGame();
+          return;
+      }
+      const nextId = queue[0];
+      const target = countries.find(c => c.id === nextId);
+      const data = window.geoData || geoData;
+      const geo = data?.[target.alpha3];
+      
+      setCapitalsQuizTarget({ ...target, coords: geo?.coords });
+      
+      // Zoom logic - Zoom to country
+      if (geo?.coords) {
+          setZoom(4); 
+          setCenter(geo.coords);
+      } else {
+          // Default view if no coords (shouldn't happen often)
+          setZoom(1);
+          setCenter([0, 20]);
+      }
+  };
+
   const startFlagQuiz = (settings) => {
       setFlagQuizSettings(settings);
       // geoData is now imported or available via window.geoData (which we set)
@@ -257,6 +327,8 @@ function App() {
     
     if (mode === 'flags') {
         startFlagQuiz(settings);
+    } else if (mode === 'capitals') {
+        startCapitalsQuiz(settings);
     } else {
         // Focus map based on continent? (Optional polish)
         if (continentFilter === 'Europe') { setZoom(3); setCenter([10, 50]); }
@@ -275,6 +347,12 @@ function App() {
     const newQueue = flagQuizQueue.slice(1);
     setFlagQuizQueue(newQueue);
     nextFlagTarget(newQueue);
+  };
+
+  const skipCapital = () => {
+      const newQueue = capitalsQuizQueue.slice(1);
+      setCapitalsQuizQueue(newQueue);
+      nextCapitalTarget(newQueue);
   };
 
   const endGame = useCallback((overrideFoundCountries) => {
@@ -378,6 +456,43 @@ function App() {
     
     // Debug
     console.log(`Checking input: ${input} (${normalizedInput}) vs Target: ${flagQuizTarget?.name}`);
+
+    // Capitals Mode Logic
+    if (gameMode === 'capitals') {
+        if (!capitalsQuizTarget) return { status: 'error' };
+
+        const targetCapital = normalize(capitalsQuizTarget.capital);
+        
+        if (normalizedInput === targetCapital) {
+             // Success
+             const newFound = [...foundCountries, capitalsQuizTarget.id];
+             setFoundCountries(newFound);
+             
+             // Next
+             const newQueue = capitalsQuizQueue.slice(1);
+             setCapitalsQuizQueue(newQueue);
+             setTimeout(() => nextCapitalTarget(newQueue), 500); // Slight delay for visual feedback
+             
+             return { status: 'success' };
+        }
+        
+        // Check fuzzy
+        const dist = levenshteinDistance ? levenshteinDistance(normalizedInput, targetCapital) : 100;
+        if (dist <= 2 && targetCapital.length > 4) { // Allow small typos for long names
+             // Success
+             const newFound = [...foundCountries, capitalsQuizTarget.id];
+             setFoundCountries(newFound);
+             
+             // Next
+             const newQueue = capitalsQuizQueue.slice(1);
+             setCapitalsQuizQueue(newQueue);
+             setTimeout(() => nextCapitalTarget(newQueue), 500); 
+             
+             return { status: 'success' };
+        }
+        
+        return { status: 'error' };
+    }
 
     // Determine search pool: use all countries for Flag Quiz to avoid filter issues, 
     // otherwise use filtered activeCountries for Classic Mode
@@ -492,7 +607,11 @@ function App() {
         <GameUI 
           gameStatus={gameStatus}
           score={foundCountries.length}
-          totalCountries={gameMode === 'flags' ? quizTotal : activeCountries.length}
+          totalCountries={
+            gameMode === 'flags' ? quizTotal : 
+            gameMode === 'capitals' ? quizTotal :
+            activeCountries.length
+          }
           timeLeft={timeLeft}
           onInputChange={handleInput}
           onGiveUp={() => endGame()}
@@ -520,11 +639,16 @@ function App() {
           }}
           viewingMap={viewingMap}
           setViewingMap={setViewingMap}
-          onSkip={gameMode === 'flags' ? skipFlag : null}
+          onSkip={
+            gameMode === 'flags' ? skipFlag : 
+            gameMode === 'capitals' ? skipCapital :
+            null
+          }
           showPublish={showPublish}
           pendingScore={pendingScore}
           confirmPublish={confirmPublish}
           cancelPublish={cancelPublish}
+          capitalsTarget={capitalsQuizTarget}
         />
       </div>
 
@@ -540,7 +664,11 @@ function App() {
             setCenter={setCenter}
             filterContinent={continentFilter}
             mapMode={viewingMap ? 'explore' : 'game'}
-            highlightCountry={gameMode === 'flags' && gameStatus === 'playing' && flagQuizTarget ? flagQuizTarget.id : null}
+            highlightCountry={
+                gameMode === 'flags' && gameStatus === 'playing' ? flagQuizTarget?.id : 
+                gameMode === 'capitals' && gameStatus === 'playing' ? capitalsQuizTarget?.id :
+                null
+            }
             flagLocation={gameMode === 'flags' && gameStatus === 'playing' && flagQuizTarget ? flagQuizTarget.coords : null}
             flagUrl={gameMode === 'flags' && gameStatus === 'playing' && flagQuizTarget ? window.gameHelpers?.getFlagUrl(flagQuizTarget.alpha3) : null}
           />
