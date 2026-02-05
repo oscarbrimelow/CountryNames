@@ -128,7 +128,7 @@ const MapBoard = ({
                <circle r="3" fill="#ef4444" stroke="#fff" strokeWidth="1" />
                
                {/* Flag - Using standard SVG image for better mobile compatibility */}
-               <g className="animate-[bounce_2s_infinite]">
+               <g className="animate-float">
                    {/* Flag Border/Bg */}
                    <rect x="-16" y="-50" width="32" height="24" fill="#18181b" rx="2" stroke="white" strokeWidth="1" />
                    {/* Flag Image */}
