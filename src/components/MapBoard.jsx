@@ -124,16 +124,24 @@ const MapBoard = ({
           </Geographies>
           {highlightCountry && flagLocation && flagUrl && (
             <Marker coordinates={flagLocation}>
-               {/* Increased height and adjusted y to prevent clipping during bounce */}
-               <foreignObject x="-20" y="-120" width="40" height="130" style={{ overflow: 'visible' }}>
-                 <div className="w-full h-full flex items-end justify-center pb-1">
-                    <div className="w-8 h-6 rounded-[2px] overflow-hidden border border-white shadow-md bg-zinc-900 animate-[bounce_2s_infinite]">
-                        <img src={flagUrl} alt="Flag" className="w-full h-full object-cover" />
-                    </div>
-                 </div>
-               </foreignObject>
                {/* Pin Point */}
                <circle r="3" fill="#ef4444" stroke="#fff" strokeWidth="1" />
+               
+               {/* Flag - Using standard SVG image for better mobile compatibility */}
+               <g className="animate-[bounce_2s_infinite]">
+                   {/* Flag Border/Bg */}
+                   <rect x="-16" y="-50" width="32" height="24" fill="#18181b" rx="2" stroke="white" strokeWidth="1" />
+                   {/* Flag Image */}
+                   <image 
+                        href={flagUrl} 
+                        x="-16" 
+                        y="-50" 
+                        width="32" 
+                        height="24" 
+                        preserveAspectRatio="xMidYMid slice"
+                        clipPath="inset(0px round 2px)"
+                   />
+               </g>
             </Marker>
           )}
         </ZoomableGroup>

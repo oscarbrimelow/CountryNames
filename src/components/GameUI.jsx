@@ -172,25 +172,25 @@ const GameUI = ({
         <motion.div 
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="absolute top-16 md:top-6 left-1/2 -translate-x-1/2 pointer-events-auto z-50 flex items-center gap-2 md:gap-4 w-full justify-center px-4"
+            className="absolute top-16 md:top-6 inset-x-0 pointer-events-auto z-50 flex items-center justify-center px-4"
         >
-            <div className="flex items-center gap-3 md:gap-6 px-4 py-2 md:px-6 md:py-3 bg-zinc-900/40 backdrop-blur-md border border-white/10 rounded-full shadow-2xl text-slate-100">
-                <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 md:gap-6 px-4 py-2 md:px-6 md:py-3 bg-zinc-900/40 backdrop-blur-md border border-white/10 rounded-full shadow-2xl text-slate-100 max-w-full overflow-x-auto scrollbar-hide">
+                <div className="flex items-center gap-2 whitespace-nowrap">
                     <Timer className="w-4 h-4 text-emerald-400" />
                     <span className="font-mono font-bold tracking-widest text-sm md:text-lg">{formatTime(timeLeft)}</span>
                 </div>
-                <div className="w-px h-4 bg-white/10"></div>
-                <div className="flex items-center gap-2">
+                <div className="w-px h-4 bg-white/10 shrink-0"></div>
+                <div className="flex items-center gap-2 whitespace-nowrap">
                     <Trophy className="w-4 h-4 text-yellow-400" />
                     <span className="font-mono font-bold text-sm md:text-lg">{score}/{totalCountries}</span>
                 </div>
-                <div className="w-px h-4 bg-white/10 hidden sm:block"></div>
-                <div className="flex items-center gap-2 hidden sm:flex">
+                <div className="w-px h-4 bg-white/10 hidden sm:block shrink-0"></div>
+                <div className="flex items-center gap-2 hidden sm:flex whitespace-nowrap">
                     <Activity className="w-4 h-4 text-blue-400" />
                     <span className="font-mono font-bold text-lg">{progress}%</span>
                 </div>
-                <div className="w-px h-4 bg-white/10"></div>
-                <button onClick={onShowList} className="flex items-center gap-2 hover:text-white transition-colors" title="View List">
+                <div className="w-px h-4 bg-white/10 shrink-0"></div>
+                <button onClick={onShowList} className="flex items-center gap-2 hover:text-white transition-colors shrink-0" title="View List">
                     <List className="w-4 h-4 text-purple-400" />
                 </button>
             </div>
@@ -198,7 +198,7 @@ const GameUI = ({
             {gameStatus === 'playing' && (
               <button 
                 onClick={onGiveUp}
-                className="flex items-center gap-2 px-4 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 rounded-full backdrop-blur-md transition-all font-medium text-sm shadow-xl"
+                className="ml-2 flex items-center gap-2 px-3 py-2 md:px-4 md:py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 rounded-full backdrop-blur-md transition-all font-medium text-xs md:text-sm shadow-xl shrink-0"
                 title="Give Up Game"
               >
                 <X className="w-4 h-4" />
@@ -290,11 +290,11 @@ const GameUI = ({
         <motion.div 
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="absolute bottom-4 md:bottom-12 left-1/2 -translate-x-1/2 w-[95%] md:w-full max-w-lg px-2 md:px-4 pointer-events-auto z-50"
+            className="absolute bottom-4 md:bottom-12 inset-x-0 mx-auto w-[95%] md:w-full max-w-lg px-2 md:px-4 pointer-events-auto z-50 flex justify-center"
         >
             <motion.form 
                 onSubmit={handleSubmit} 
-                className="relative group"
+                className="relative group w-full"
                 animate={shake ? { x: [-10, 10, -10, 10, 0] } : {}}
                 transition={{ duration: 0.4 }}
             >
