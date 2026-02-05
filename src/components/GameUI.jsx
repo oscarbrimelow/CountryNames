@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Timer, Trophy, Activity, Play, SkipForward, BarChart2, List, X, Share2, Flag, User, Globe, Map, Navigation, Lock, Info, ShieldAlert, LogOut, BookOpen, ArrowLeft } from 'lucide-react';
+import { Timer, Trophy, Activity, Play, SkipForward, BarChart2, List, X, Share2, Flag, User, Globe, Map, Navigation, Lock, Info, ShieldAlert, LogOut, BookOpen, ArrowLeft, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const GameUI = ({ 
@@ -117,6 +117,7 @@ const GameUI = ({
     { id: 'classic', name: 'Name Countries', icon: Globe, description: 'Identify countries on the map', status: 'active' },
     { id: 'flags', name: 'Flag Quiz', icon: Flag, description: 'Match flags to countries', status: 'active' },
     { id: 'capitals', name: 'Capital Cities', icon: Navigation, description: 'Name the capital cities', status: 'active' },
+    { id: 'daily', name: 'Daily Dossier', icon: FileText, description: 'Solve the mystery country', status: 'active' },
     { id: 'states', name: 'State Challenge', icon: Map, description: 'Identify states and provinces', status: 'coming_soon' },
   ];
 
@@ -683,6 +684,30 @@ const GameUI = ({
                                                         </div>
                                                     )}
                                                 </>
+                                            ) : selectedMode === 'daily' ? (
+                                                <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl animate-in fade-in zoom-in duration-300">
+                                                    <h3 className="text-sm font-bold text-purple-400 mb-2 flex items-center gap-2">
+                                                        <FileText className="w-4 h-4" />
+                                                        Mission Briefing
+                                                    </h3>
+                                                    <p className="text-xs text-purple-200 mb-3 leading-relaxed">
+                                                        A new mystery country has been selected for today. Use your intelligence to identify it with minimal assistance.
+                                                    </p>
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center gap-2 text-xs text-purple-300/80 bg-purple-500/5 p-2 rounded-lg">
+                                                            <span className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold">1</span>
+                                                            <span>5 Clues available per mission</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 text-xs text-purple-300/80 bg-purple-500/5 p-2 rounded-lg">
+                                                            <span className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold">2</span>
+                                                            <span>Score decreases with each clue used</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 text-xs text-purple-300/80 bg-purple-500/5 p-2 rounded-lg">
+                                                            <span className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold">3</span>
+                                                            <span>Global leaderboard resets daily</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             ) : (
                                                 <div>
                                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Region</label>
@@ -702,6 +727,7 @@ const GameUI = ({
                                                 </div>
                                             )}
                                             
+                                            {selectedMode !== 'daily' && (
                                             <div>
                                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Duration</label>
                                                 <div className="grid grid-cols-3 gap-2">
@@ -720,8 +746,10 @@ const GameUI = ({
                                                     ))}
                                                 </div>
                                             </div>
+                                            )}
                                         </div>
 
+                                        {selectedMode !== 'daily' && (
                                         <div className="mt-6 pt-6 border-t border-white/5">
                                             <h3 className="text-sm font-bold text-amber-500 mb-3 flex items-center gap-2">
                                                 <Trophy className="w-4 h-4" />
@@ -745,6 +773,7 @@ const GameUI = ({
                                                 </p>
                                             </div>
                                         </div>
+                                        )}
                                     </div>
 
                                     <button 

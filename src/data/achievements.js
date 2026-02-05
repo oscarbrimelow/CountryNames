@@ -73,5 +73,13 @@ export const ACHIEVEMENTS = [
         icon: Zap,
         color: 'text-yellow-400',
         condition: (stats) => stats.fastestWin 
+    },
+    {
+        id: 'daily_detective',
+        title: 'Daily Detective',
+        description: 'Solve a Daily Dossier mission',
+        icon: Award,
+        color: 'text-pink-400',
+        condition: (stats) => stats.dailyWins >= 1
     }
 ];

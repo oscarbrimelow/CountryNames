@@ -19,10 +19,12 @@ function App() {
   const ListModal = window.ListModal;
   const AuthModal = window.AuthModal;
   const AboutModal = window.AboutModal;
+  const DailyGame = window.DailyGame;
   const countries = window.countries || [];
   const normalize = window.normalize;
   const geoData = window.geoData || {};
   const { levenshteinDistance } = window.gameHelpers || {};
+  const { getDailyCountry, getDailySeed, getDailyStatus, saveDailyStatus } = window.dailyLogic || {};
 
   // Auth State
   const [user, setUser] = useState(null);
@@ -61,6 +63,10 @@ function App() {
   const [capitalsQuizTarget, setCapitalsQuizTarget] = useState(null);
   const [capitalsQuizQueue, setCapitalsQuizQueue] = useState([]);
   const [capitalsQuizSettings, setCapitalsQuizSettings] = useState(null);
+
+  // Daily Game State
+  const [dailyTarget, setDailyTarget] = useState(null);
+  const [dailyStatusState, setDailyStatusState] = useState(null);
 
   // Map State
   const [zoom, setZoom] = useState(1);
@@ -204,13 +210,6 @@ function App() {
     return () => clearInterval(timer);
   }, [gameStatus, timeLeft]);
 
-    if (gameMode === 'flags' || gameMode === 'capitals') {
-       // Flag and Capital mode handles its own next logic in checkAnswer/handleInput
-       // But if we need to skip...
-       return;
-    }
-  }, [gameMode]);
-
   const startCapitalsQuiz = (settings) => {
       setCapitalsQuizSettings(settings);
       const data = window.geoData || geoData;
@@ -245,6 +244,56 @@ function App() {
       
       // Pick first
       nextCapitalTarget(queue);
+  };
+
+  const startDailyGame = () => {
+      const { seed, date } = getDailySeed();
+      const data = window.geoData || geoData;
+      // Filter valid countries
+      const pool = countries.filter(c => data[c.alpha3]?.coords);
+      
+      if (pool.length === 0) return;
+
+      const target = getDailyCountry(pool, date);
+      
+      const status = getDailyStatus(date) || { 
+          solved: false, 
+          guesses: [], 
+          cluesRevealed: 1,
+          won: false 
+      };
+
+      setDailyTarget(target);
+      setDailyStatusState(status);
+      
+      if (status.won) {
+          setGameStatus('won');
+      } else {
+          setGameStatus('playing');
+      }
+  };
+
+  const handleDailyGuess = (isCorrect, cluesCount, newGuesses) => {
+      const { date } = getDailySeed();
+      const status = {
+          solved: isCorrect === true, 
+          guesses: newGuesses || (dailyStatusState?.guesses || []),
+          cluesRevealed: cluesCount,
+          won: isCorrect === true
+      };
+      
+      setDailyStatusState(status);
+      saveDailyStatus(date, status);
+      
+      if (isCorrect === true) {
+          setGameStatus('won');
+          
+          // Stats & Achievements
+          const newStats = { ...userStats };
+          // Could track daily wins here
+          
+          // Check for achievements if needed
+      }
   };
 
   const nextCapitalTarget = (queue) => {
@@ -338,6 +387,69 @@ function App() {
       }
   };
 
+  const startDailyGame = () => {
+    if (!getDailySeed || !getDailyCountry) return;
+    
+    const { date } = getDailySeed();
+    const target = getDailyCountry(countries, date);
+    
+    // Check saved status
+    const saved = getDailyStatus ? getDailyStatus(date) : null;
+    
+    setDailyTarget(target);
+    setDailyStatusState(saved || { solved: false, guesses: [], cluesRevealed: 1 });
+    
+    if (saved && saved.solved) {
+        setGameStatus('won');
+    } else {
+        setGameStatus('playing');
+    }
+  };
+
+  const closeDailyGame = () => {
+      setGameMode('classic');
+      setGameStatus('idle');
+      setDailyTarget(null);
+  };
+
+  const handleDailyGuess = (isCorrect, cluesCount, guesses) => {
+      if (!dailyTarget) return;
+      
+      const { date } = getDailySeed();
+      
+      // Update local state
+      const newStatus = {
+          solved: isCorrect,
+          guesses: guesses,
+          cluesRevealed: cluesCount
+      };
+      
+      setDailyStatusState(newStatus);
+      if (saveDailyStatus) saveDailyStatus(date, newStatus);
+      
+      if (isCorrect) {
+          setGameStatus('won');
+          
+          // Update Stats
+          const newStats = { ...userStats };
+          newStats.dailyWins = (newStats.dailyWins || 0) + 1;
+          setUserStats(newStats);
+          localStorage.setItem('user_stats', JSON.stringify(newStats));
+          
+          // Check Daily Detective Achievement
+          if (!unlockedAchievements.includes('daily_detective')) {
+              const newUnlocked = [...unlockedAchievements, 'daily_detective'];
+              setUnlockedAchievements(newUnlocked);
+              localStorage.setItem('user_achievements', JSON.stringify(newUnlocked));
+              
+              // Notify
+              const ach = ACHIEVEMENTS.find(a => a.id === 'daily_detective');
+              setNewAchievement(ach);
+              setTimeout(() => setNewAchievement(null), 5000);
+          }
+      }
+  };
+
   const startGame = (options = {}) => {
     const mode = options.mode || 'classic';
     const settings = options.settings || {};
@@ -361,6 +473,8 @@ function App() {
         startFlagQuiz(settings);
     } else if (mode === 'capitals') {
         startCapitalsQuiz(settings);
+    } else if (mode === 'daily') {
+        startDailyGame();
     } else {
         // Focus map based on continent? (Optional polish)
         if (continentFilter === 'Europe') { setZoom(3); setCenter([10, 50]); }
@@ -687,6 +801,37 @@ function App() {
       
       {/* Game UI Overlay */}
       <div className="absolute inset-0 z-10 pointer-events-none">
+        {gameMode === 'daily' && dailyTarget ? (
+            <div className="absolute inset-0 z-50 bg-zinc-950 pointer-events-auto flex flex-col animate-in fade-in duration-500">
+                {/* Daily Game Header */}
+                <div className="p-4 bg-zinc-900 border-b border-white/10 flex items-center justify-between shadow-lg z-10">
+                    <button 
+                        onClick={closeDailyGame}
+                        className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors"
+                    >
+                        <ArrowLeft className="w-6 h-6" />
+                    </button>
+                    <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                        DAILY DOSSIER
+                    </h1>
+                    <div className="w-10"></div> {/* Spacer */}
+                </div>
+                
+                <div className="flex-1 overflow-hidden relative">
+                     {DailyGame && (
+                         <DailyGame 
+                            targetCountry={dailyTarget}
+                            geoData={window.geoData || geoData}
+                            onGuess={handleDailyGuess}
+                            onGiveUp={closeDailyGame}
+                            gameStatus={gameStatus}
+                            countries={countries}
+                            dailyStatus={dailyStatusState}
+                         />
+                     )}
+                </div>
+            </div>
+        ) : (
         <GameUI 
           gameStatus={gameStatus}
           score={foundCountries.length}
@@ -737,6 +882,7 @@ function App() {
           unlockedAchievements={unlockedAchievements}
           newAchievement={newAchievement}
         />
+        )}
       </div>
 
       {/* Map Layer - Always Rendered but controlled */}
